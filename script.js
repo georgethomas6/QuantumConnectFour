@@ -1,65 +1,94 @@
 class Move {
-
   #purplesTurn = true; // true if it is red's turn, false if it is yellow's turn
   #position = 3; // the position of the piece
   #inHorizontalState = false; // true if the piece is in horizontal state
   #inVerticalState = false; // true if the piece is in vertical state
   #isCertain = true; // true if the piece is certain, false if the piece is not certain
   #turnsTilMeasurement = 0; // if turns til meaasurement is greater than 3 then the piece has been measured
-  constructor() {};
+  #column1;
+  #column2;
+  constructor() {}
 
-  //getters
-
- /**
-  * @returns #purplesTurn
-  */
- get purplesTurn() {
+  /**
+   * @returns #purplesTurn
+   */
+  get purplesTurn() {
     return this.#purplesTurn;
   }
 
- /**
-  * @returns #position
-  */
+  /**
+   * @returns #position
+   */
   get position() {
     return this.#position;
   }
 
- /**
-  * @returns #horizontalState
-  */
+  /**
+   * @returns #horizontalState
+   */
   get horizontalState() {
     return this.#inHorizontalState;
   }
 
- /**
-  * @returns #verticalState
-  */
+  /**
+   * @returns #verticalState
+   */
   get verticalState() {
     return this.#inVerticalState;
   }
 
- /**
-  * @returns #certain
-  */
+  /**
+   * @returns #certain
+   */
   get certain() {
     return this.#isCertain;
   }
 
- /**
-  * @returns #purplesTurn
-  */
+  /**
+   * @returns #purplesTurn
+   */
   get turnsTilMeasurement() {
     return this.#turnsTilMeasurement;
+  }
+
+  /**
+   * @returns #column1
+   */
+  get column1() {
+    return this.#column1;
+  }
+
+  /**
+   * @returns #column2
+   */
+  get column2() {
+    return this.#column2;
+  }
+
+  //setters
+
+  /**
+   * @param col -> this column to initialize column1 to
+   */
+  set column1(col) {
+    this.#column1 = col;
+  }
+
+  /**
+   * @param col -> this column to initialize column2 to
+   */
+  set column2(col) {
+    this.#column2 = col;
   }
 
   /**
    * Increments the position
    * @returns void
    */
-  incrementPosition(){
+  incrementPosition() {
     this.#position++;
-    if (this.#position > 6){
-        this.#position = 0;
+    if (this.#position > 6) {
+      this.#position = 0;
     }
   }
 
@@ -67,21 +96,28 @@ class Move {
    * Decrements the position
    * @returns void
    */
-  decrementPosition(){
+  decrementPosition() {
     this.#position--;
-    if (this.#position < 0){
-        this.#position = 6;
+    if (this.#position < 0) {
+      this.#position = 6;
     }
   }
 
+  /**
+   * Sets the value of column1 to the current position if it has not been initialized, otherwise it initializes column2
+   */
+  place(column) {
+    if (this.#column1 == null) {
+      this.#column1 = column;
+    } else {
+      this.#column2 = column;
+    }
+  }
 }
 
-
-
-
 class Game {
-    #board; // A 10 x 7 array of strings, each representing a cell in the board
-    #moveInProgress; // the move that is in the process of being made
+  #board; // A 10 x 7 array of strings, each representing a cell in the board
+  #moveInProgress; // the move that is in the process of being made
   constructor() {
     board = initBoard();
     const moveInProgress = new Move();
@@ -160,6 +196,7 @@ function drawColumns() {
     ctx.stroke();
   }
 }
+
 /**
  * Draw the grid lines that form the connect four board
  */
@@ -334,6 +371,7 @@ const board = [
   ["YYY", "YXX", "PPP", "YXX", "XXP", "XXX", "XXX"],
 ];
 
+let move = new Move();
 clearCanvasGrey();
 drawGridLines();
 drawPieces(board);
@@ -345,19 +383,27 @@ const place = document.getElementById("place");
 const restart = document.getElementById("restart");
 
 right.addEventListener("click", function (e) {
-  redPosition++;
-  if (redPosition > 6) {
-    redPosition = 0;
-  }
-  console.log(redPosition);
+  move.incrementPosition();
+  console.log(move.position);
 });
 
 left.addEventListener("click", function (e) {
-  console.log("abigail");
+  move.decrementPosition();
+  console.log(move.position);
 });
 
 state.addEventListener("click", function (e) {});
 
-place.addEventListener("click", function (e) {});
+place.addEventListener("click", function (e) {
+  if (move.column1 == null) {
+    move.place(move.position);
+  } else if (move.column2 == null) {
+    move.place(move.position);
+  }
+  console.log(move.column1 + " this is column 1");
+  if (move.column2 != null) {
+    console.log(move.column2 + " this is column 2");
+  }
+});
 
 restart.addEventListener("click", function (e) {});
