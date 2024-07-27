@@ -166,6 +166,7 @@ function initBoard() {
   }
 }
 
+
 //GRAPHICS FUNCTIONS ARE BELOW HERE
 
 /**
@@ -280,14 +281,6 @@ function drawVerticalStatePiece(xCord, yCord, fillColor) {
   ctx.moveTo(xCord, topY);
   ctx.lineTo(xCord, bottomY);
   ctx.stroke();
-}
-{
-  {
-    {
-      {
-      }
-    }
-  }
 }
 
 /**
@@ -409,6 +402,11 @@ const left = document.getElementById("left");
 const state = document.getElementById("state");
 const place = document.getElementById("place");
 const restart = document.getElementById("restart");
+const instructions = document.getElementById("instructions");
+
+instructions.addEventListener("click", function (e) {
+    window.location.href = 'instructions.html';
+})
 
 right.addEventListener("click", function (e) {
   move.incrementPosition();
