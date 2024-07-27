@@ -1,4 +1,4 @@
-class Move {
+class Turn {
   #purplesTurn = true; // true if it is red's turn, false if it is yellow's turn
   #position = 3; // the position of the piece
   #inHorizontalState = false; // true if the piece is in horizontal state
@@ -68,6 +68,7 @@ class Move {
   //setters
 
   /**
+   * Initializes column1 to the value of col
    * @param col -> this column to initialize column1 to
    */
   set column1(col) {
@@ -75,10 +76,34 @@ class Move {
   }
 
   /**
+   * Initializes column2 to the value of col
    * @param col -> this column to initialize column2 to
    */
   set column2(col) {
     this.#column2 = col;
+  }
+
+  /**
+   * Changes the state of the move. isCertain -> inVerticalState -> inHorizontalState -> isCertain 
+   */
+  changeState() {
+    if (this.#isCertain){
+        this.#isCertain = false;
+        this.#inVerticalState = true;
+    } else if (this.#inVerticalState){
+        this.#inVerticalState = false;
+        this.#inHorizontalState = true;
+    } else if (this.#inHorizontalState){
+        this.#inHorizontalState = false;
+        this.#isCertain = true;
+    }
+  }
+
+  /**
+   * Increments the turnsTilMeasure field
+   */
+  incrementTurnsTilMeasure(){
+    this.#turnsTilMeasurement++;
   }
 
   /**
@@ -105,14 +130,17 @@ class Move {
 
   /**
    * Sets the value of column1 to the current position if it has not been initialized, otherwise it initializes column2
+   * @param column -> the int we want to initialize column1 or column2
    */
   place(column) {
+    this.incrementTurnsTilMeasure();
     if (this.#column1 == null) {
       this.#column1 = column;
     } else {
       this.#column2 = column;
     }
   }
+
 }
 
 class Game {
@@ -120,7 +148,7 @@ class Game {
   #moveInProgress; // the move that is in the process of being made
   constructor() {
     board = initBoard();
-    const moveInProgress = new Move();
+    const moveInProgress = new Turn();
   }
 }
 
@@ -371,7 +399,7 @@ const board = [
   ["YYY", "YXX", "PPP", "YXX", "XXP", "XXX", "XXX"],
 ];
 
-let move = new Move();
+let move = new Turn();
 clearCanvasGrey();
 drawGridLines();
 drawPieces(board);
@@ -392,7 +420,17 @@ left.addEventListener("click", function (e) {
   console.log(move.position);
 });
 
-state.addEventListener("click", function (e) {});
+state.addEventListener("click", function (e) {
+    move.changeState();
+    if (move.certain){
+        console.log("Certain");
+
+    } else if (move.verticalState){
+        console.log("Vertical State");
+    } else if (move.horizontalState){
+        console.log("horizontal state");
+    }
+});
 
 place.addEventListener("click", function (e) {
   if (move.column1 == null) {
