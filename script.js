@@ -405,7 +405,7 @@ const restart = document.getElementById("restart");
 const instructions = document.getElementById("instructions");
 
 instructions.addEventListener("click", function (e) {
-    window.location.href = 'instructions.html';
+    window.location.href = "instructions.html";
 })
 
 right.addEventListener("click", function (e) {
