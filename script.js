@@ -1,6 +1,108 @@
-redPosition = 3;
-yellowPosition = 3;
-redsTurn = true;
+class Move {
+
+  #purplesTurn = true; // true if it is red's turn, false if it is yellow's turn
+  #position = 3; // the position of the piece
+  #inHorizontalState = false; // true if the piece is in horizontal state
+  #inVerticalState = false; // true if the piece is in vertical state
+  #isCertain = true; // true if the piece is certain, false if the piece is not certain
+  #turnsTilMeasurement = 0; // if turns til meaasurement is greater than 3 then the piece has been measured
+  constructor() {};
+
+  //getters
+
+ /**
+  * @returns #purplesTurn
+  */
+ get purplesTurn() {
+    return this.#purplesTurn;
+  }
+
+ /**
+  * @returns #position
+  */
+  get position() {
+    return this.#position;
+  }
+
+ /**
+  * @returns #horizontalState
+  */
+  get horizontalState() {
+    return this.#inHorizontalState;
+  }
+
+ /**
+  * @returns #verticalState
+  */
+  get verticalState() {
+    return this.#inVerticalState;
+  }
+
+ /**
+  * @returns #certain
+  */
+  get certain() {
+    return this.#isCertain;
+  }
+
+ /**
+  * @returns #purplesTurn
+  */
+  get turnsTilMeasurement() {
+    return this.#turnsTilMeasurement;
+  }
+
+  /**
+   * Increments the position
+   * @returns void
+   */
+  incrementPosition(){
+    this.#position++;
+    if (this.#position > 6){
+        this.#position = 0;
+    }
+  }
+
+  /**
+   * Decrements the position
+   * @returns void
+   */
+  decrementPosition(){
+    this.#position--;
+    if (this.#position < 0){
+        this.#position = 6;
+    }
+  }
+
+}
+
+
+
+
+class Game {
+    #board; // A 10 x 7 array of strings, each representing a cell in the board
+    #moveInProgress; // the move that is in the process of being made
+  constructor() {
+    board = initBoard();
+    const moveInProgress = new Move();
+  }
+}
+
+/**
+ * Initializes a 7 x 10 array of strings "XXX"
+ */
+function initBoard() {
+  board = new Array();
+  for (let y = 0; y < 7; y++) {
+    row = new Array();
+    for (let x = 0; x < 11; x++) {
+      row("XXX");
+    }
+    board(row);
+  }
+}
+
+//GRAPHICS FUNCTIONS ARE BELOW HERE
 
 /**
  * Clears the canvas with a grey background
@@ -115,13 +217,12 @@ function drawVerticalStatePiece(xCord, yCord, fillColor) {
   ctx.stroke();
 }
 {
+  {
     {
-        {
-            {
-
-            }
-        }
+      {
+      }
     }
+  }
 }
 
 /**
@@ -176,8 +277,8 @@ function initCaseMap() {
  * @param yCoordinate -> yCoordinate of our drawing
  */
 function processEntry(entry, xCoordinate, yCoordinate) {
-    const caseMap = initCaseMap();
-    const entryCase = caseMap.get(entry);
+  const caseMap = initCaseMap();
+  const entryCase = caseMap.get(entry);
   switch (entryCase) {
     case 1:
       drawPiece(xCoordinate, yCoordinate, "purple");
