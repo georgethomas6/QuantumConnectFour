@@ -175,9 +175,9 @@ class Game {
    */
   noProppedPiece(col, row) {
     while (row < 10) {
-      let isUncertain =
-        this.#board[row][col] != "PPP" && this.#board[row][col] != "YYY";
-      if (isUncertain) {
+      let isCertain =
+        this.#board[row][col] == "PPP" || this.#board[row][col] == "YYY";
+      if (!isCertain) {
         return false;
       }
       row++;
@@ -231,6 +231,38 @@ class Game {
     }
     return "XXX";
   }
+
+  /**
+   * Checks for ascending diagonal groups on the board. In the process it checks for propped pieces.
+   * @returns "PPP" if there is a purple group, "YYY" if there is a yellow group, and "XXX" if there is not a group
+   */
+  checkAscendingDiagonals() {
+    for (let y = 9; y > 6; y--) {
+      for (let x = 0; x < 4; x++) {
+        let state = this.#board[y][x];
+        let itsCertain = state == "PPP" || state == "YYY";
+        let thereIsAGroup =
+          this.#board[y][x] == this.#board[y - 1][x + 1] &&
+          this.#board[y][x] == this.#board[y - 2][x + 2] &&
+          this.#board[y][x] == this.#board[y - 3][x + 3];
+        let noProppedPieces =
+          this.noProppedPiece(x, y + 1) &&
+          this.noProppedPiece(x + 1, y) &&
+          this.noProppedPiece(x + 2, y - 1) &&
+          this.noProppedPiece(x + 3, y - 2);
+        if (thereIsAGroup && itsCertain && noProppedPieces) {
+          return state;
+        }
+      }
+    }
+    return "XXX";
+  }
+
+  /**
+   * Checks for descending diagonal groups on the board. In the process it checks for propped pieces.
+   * @returns "PPP" if there is a purple group, "YYY" if there is a yellow group, and "XXX" if there is not a group
+   */
+  checkDescendingDiagonals() {}
 
   /**
    * This function calculates where the turnInProgress should be drawn above the board
@@ -577,8 +609,8 @@ let board = [
   ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
   ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
   ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
-  ["YYY", "YYY", "YYY", "YYY", "PPP", "XXX", "PPP"],
-  ["YYY", "YYY", "PXX", "YYY", "PPP", "XXX", "PPP"],
+  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
+  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
 ];
 
 let game = new Game();
@@ -597,7 +629,7 @@ instructions.addEventListener("click", function (e) {
 
 right.addEventListener("click", function (e) {
   game.reactToRightButton();
-  console.log(game.checkRows());
+  console.log(game.checkAscendingDiagonals());
 });
 
 left.addEventListener("click", function (e) {
