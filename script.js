@@ -15,6 +15,8 @@ class TurnInProgress {
     this.#column = 3;
     this.#state = "certain";
     this.#canModifyState = true;
+    this.#firstPlacement = -1; // -1 is just a flag to show the first placement has not been made
+    this.#secondPlacement = -1;
   }
 
   //Getters
@@ -128,6 +130,7 @@ class TurnInProgress {
 class Game {
   #board; // A 10 x 7 array of strings, each representing a cell in the board
   #turnInProgress; // the move that is in the process of being made
+  #graphics
   constructor() {
     //initalize blank board
     this.#board = [];
@@ -136,6 +139,7 @@ class Game {
       this.#board.push(row);
     }
     this.#turnInProgress = new TurnInProgress("purple");
+    this.#graphics = new Graphics();
   }
 
   //GETTERS
@@ -157,6 +161,15 @@ class Game {
   // GAME FUNCTIONS
 
   /**
+   * This function calculates where the turnInProgress should be drawn above the board
+   * @return (int)
+   */
+  turnInProgressDepth() {
+    let firstOpenRow = this.firstOpenRow(this.#turnInProgress.column);
+    let depth = firstOpenRow >= 4 ? 3 : firstOpenRow; 
+    return depth;
+  }
+  /**
    * Returns the FIRST open row on the board in the given column.
    * @param column -> must be an integer
    * @return int
@@ -174,10 +187,35 @@ class Game {
   }
 
   /**
+   * Begins the game
+   */
+  start(){
+    this.#graphics.clearCanvasGrey();
+    this.#graphics.drawGridLines();
+    this.#graphics.drawPieces(this.#board);
+    this.#graphics.drawTurnInProgress(
+      this.#turnInProgress.column,
+      this.turnInProgressDepth(),
+      this.#turnInProgress.firstPlacement,
+      this.#turnInProgress.color,
+      this.#turnInProgress.state
+    )
+  }
+  /**
    * Handles a right button click.
    */
   reactToRightButton() {
     this.#turnInProgress.incrementPosition();
+    this.#graphics.clearCanvasGrey();
+    this.#graphics.drawGridLines();
+    this.#graphics.drawPiece(this.#board);
+    this.#graphics.drawTurnInProgress(
+      this.#turnInProgress.column,
+      this.turnInProgressDepth(),
+      this.#turnInProgress.firstPlacement,
+      this.#turnInProgress.color,
+      this.#turnInProgress.state
+    );
   }
 
   /**
@@ -185,6 +223,16 @@ class Game {
    */
   reactToLeftButton() {
     this.#turnInProgress.decrementPosition();
+    this.#graphics.clearCanvasGrey();
+    this.#graphics.drawGridLines();
+    this.#graphics.drawPiece(this.#board);
+    this.#graphics.drawTurnInProgress(
+      this.#turnInProgress.column,
+      this.turnInProgressDepth(),
+      this.#turnInProgress.firstPlacement,
+      this.#turnInProgress.color,
+      this.#turnInProgress.state
+    );
   }
 
   /**
@@ -208,7 +256,13 @@ class Game {
    * Handles a restart button click
    */
   reactToRestartButton() {
-    //TODO
+    this.#board = [];
+    for (let y = 0; y < 10; y++) {
+      let row = ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"];
+      this.#board.push(row);
+    }
+    this.#turnInProgress = new TurnInProgress("purple"); 
+    this.start();
   }
 }
 
@@ -217,6 +271,8 @@ class Game {
 class Graphics {
   #canvas;
   #ctx;
+  #cellWidth = 640 / 9;
+  #cellHeight = 640 / 12;
 
   constructor() {
     this.#canvas = document.getElementById("myCanvas");
@@ -237,8 +293,8 @@ class Graphics {
    */
   drawRows() {
     //9 is the number of columns
-    const startWidth = 640 / 9;
-    const endWidth = (640 / 9) * 8;
+    const startWidth = this.#cellWidth;
+    const endWidth = this.#cellWidth * 8;
     //draw rows
     for (let i = 5; i < 12; i++) {
       const lineY = (640 / 12) * i;
@@ -256,8 +312,8 @@ class Graphics {
    */
   drawColumns() {
     //12 is the number of rows
-    const startHeight = (640 / 12) * 5;
-    const endHeight = 640 - 640 / 12;
+    const startHeight = this.#cellHeight * 5;
+    const endHeight = 640 - this.#cellHeight;
 
     //draw cols
     for (let i = 1; i < 9; i++) {
@@ -402,41 +458,46 @@ class Graphics {
    * @param board -> the board, must be 10 x 7 array of strings
    */
   drawPieces(board) {
-    const cellWidth = 640 / 9;
-    const cellHeight = 640 / 12;
     //draw the pieces on the board
     for (let y = 0; y < board.length; y++) {
       for (let x = 0; x < board[y].length; x++) {
-        const xCoordinate = cellWidth / 2 + cellWidth * (x + 1);
-        const yCoordinate = cellHeight / 2 + cellHeight * (y + 1);
+        const xCoordinate = this.#cellWidth / 2 + this.#cellWidth * (x + 1);
+        const yCoordinate = this.#cellHeight / 2 + this.#cellHeight * (y + 1);
 
         this.processEntry(board[y][x], xCoordinate, yCoordinate);
       }
     }
   }
+
+  /**
+   * Draws the turn in progress above the board
+   * @param  {int} column -> (int)
+   * @param  {int} row -> (int)
+   * @param  {int} placement1
+   * @param  {string} color -> (string)
+   * @param  {string} pieceState -> (string)
+   */
+  drawTurnInProgress(column, row, placement1, color, pieceState) {
+    const xCoordinate = this.#cellWidth / 2 + this.#cellWidth * (column + 1);
+    const yCoordinate = this.#cellHeight / 2 + this.#cellHeight * (row + 1);
+    if (pieceState == "certain") {
+      this.drawPiece(xCoordinate, yCoordinate, color);
+    } else if (pieceState == "horizontal") {
+      if (placement1 != -1) {
+        this.drawHorizontalStatePiece(xCoordinate, yCoordinate, color);
+      }
+      this.drawHorizontalStatePiece(xCoordinate, yCoordinate, color);
+    } else if (pieceState == "vertical") {
+      if (placement1 != -1) {
+        this.drawVerticalStatePiece(xCoordinate, yCoordinate, color);
+      }
+      this.drawVerticalStatePiece(xCoordinate, yCoordinate, color);
+    }
+  }
 }
 
-// TESTING BELOW
-
-const board = [
-  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
-  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
-  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
-  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
-  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
-  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
-  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
-  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
-  ["XXX", "XXP", "XXX", "PXX", "PXX", "XXX", "XXX"],
-  ["YYY", "YXX", "PPP", "YXX", "XXP", "XXX", "XXX"],
-];
-
 let game = new Game();
-let graphics = new Graphics();
-graphics.clearCanvasGrey();
-graphics.drawGridLines();
-graphics.drawPieces(board);
-
+game.start();
 const right = document.getElementById("right");
 const left = document.getElementById("left");
 const state = document.getElementById("state");
@@ -450,12 +511,12 @@ instructions.addEventListener("click", function (e) {
 
 right.addEventListener("click", function (e) {
   game.reactToRightButton();
-  console.log("Column was incremented to " + game.turnInProgress.column);
+  
 });
 
 left.addEventListener("click", function (e) {
   game.reactToLeftButton();
-  console.log("Column was decremented to " + game.turnInProgress.column);
+
 });
 
 state.addEventListener("click", function (e) {
