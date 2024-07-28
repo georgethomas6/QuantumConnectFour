@@ -130,7 +130,7 @@ class TurnInProgress {
 class Game {
   #board; // A 10 x 7 array of strings, each representing a cell in the board
   #turnInProgress; // the move that is in the process of being made
-  #graphics
+  #graphics;
   constructor() {
     //initalize blank board
     this.#board = [];
@@ -158,7 +158,79 @@ class Game {
     return this.#turnInProgress;
   }
 
+  /**
+   * Sets the board to the param. For debugging only.
+   */
+  set board(board) {
+    this.#board = board;
+  }
+
   // GAME FUNCTIONS
+
+  /**
+   * Checks for an uncertain under the pieces played in a given column
+   * @param {int} col -> column to check for uncertain pieces in
+   * @param {int} row -> first spot under the piece being checked in a group
+   * @returns true if there are no uncertain pieces in the given column, false otherwise
+   */
+  noProppedPiece(col, row) {
+    while (row < 10) {
+      let isUncertain =
+        this.#board[row][col] != "PPP" && this.#board[row][col] != "YYY";
+      if (isUncertain) {
+        return false;
+      }
+      row++;
+    }
+    return true;
+  }
+
+  /**
+   * This function checks every single column for a group. No need to check for propped pieces here.
+   * @returns "PPP" if there is a purple group, "YYY" if there is a yellow group, and "XXX" if there is not a group
+   */
+  checkColumns() {
+    for (let y = 9; y > 6; y--) {
+      for (let x = 0; x < 7; x++) {
+        let state = this.#board[y][x];
+        let itsCertain = state == "PPP" || state == "YYY";
+        let thereIsAGroup =
+          this.#board[y][x] == this.#board[y - 1][x] &&
+          this.#board[y][x] == this.#board[y - 2][x] &&
+          this.#board[y][x] == this.#board[y - 3][x];
+        if (thereIsAGroup && itsCertain) {
+          return state;
+        }
+      }
+    }
+    return "XXX";
+  }
+
+  /**
+   * This function checks every single row for a group. In the process it makes sure no member of the group is being propped up by an uncertain piece.
+   * @returns "PPP" if there is a purple group, "YYY" if there is a yellow group, and "XXX" if there is not a group
+   */
+  checkRows() {
+    for (let y = 9; y > 3; y--) {
+      for (let x = 0; x < 4; x++) {
+        let state = this.#board[y][x];
+        let itsCertain = state == "PPP" || state == "YYY";
+        let thereIsAGroup =
+          this.#board[y][x] == this.#board[y][x + 1] &&
+          this.#board[y][x] == this.#board[y][x + 2] &&
+          this.#board[y][x] == this.#board[y][x + 3];
+        let noProppedPieces =
+          this.noProppedPiece(x, y + 1) &&
+          this.noProppedPiece(x + 1, y + 1) &&
+          this.noProppedPiece(x + 2, y + 1) &&
+          this.noProppedPiece(x + 3, y + 1);
+        if (thereIsAGroup && itsCertain && noProppedPieces) {
+          return state;
+        }
+      }
+    }
+    return "XXX";
+  }
 
   /**
    * This function calculates where the turnInProgress should be drawn above the board
@@ -166,7 +238,7 @@ class Game {
    */
   turnInProgressDepth() {
     let firstOpenRow = this.firstOpenRow(this.#turnInProgress.column);
-    let depth = firstOpenRow >= 4 ? 3 : firstOpenRow; 
+    let depth = firstOpenRow >= 4 ? 3 : firstOpenRow;
     return depth;
   }
   /**
@@ -189,7 +261,7 @@ class Game {
   /**
    * Begins the game
    */
-  start(){
+  start() {
     this.#graphics.clearCanvasGrey();
     this.#graphics.drawGridLines();
     this.#graphics.drawPieces(this.#board);
@@ -199,7 +271,7 @@ class Game {
       this.#turnInProgress.firstPlacement,
       this.#turnInProgress.color,
       this.#turnInProgress.state
-    )
+    );
   }
   /**
    * Handles a right button click.
@@ -261,7 +333,7 @@ class Game {
       let row = ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"];
       this.#board.push(row);
     }
-    this.#turnInProgress = new TurnInProgress("purple"); 
+    this.#turnInProgress = new TurnInProgress("purple");
     this.start();
   }
 }
@@ -496,7 +568,21 @@ class Graphics {
   }
 }
 
+let board = [
+  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
+  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
+  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
+  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
+  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
+  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
+  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
+  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
+  ["YYY", "YYY", "YYY", "YYY", "PPP", "XXX", "PPP"],
+  ["YYY", "YYY", "PXX", "YYY", "PPP", "XXX", "PPP"],
+];
+
 let game = new Game();
+game.board = board;
 game.start();
 const right = document.getElementById("right");
 const left = document.getElementById("left");
@@ -511,12 +597,11 @@ instructions.addEventListener("click", function (e) {
 
 right.addEventListener("click", function (e) {
   game.reactToRightButton();
-  
+  console.log(game.checkRows());
 });
 
 left.addEventListener("click", function (e) {
   game.reactToLeftButton();
-
 });
 
 state.addEventListener("click", function (e) {
