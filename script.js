@@ -262,7 +262,27 @@ class Game {
    * Checks for descending diagonal groups on the board. In the process it checks for propped pieces.
    * @returns "PPP" if there is a purple group, "YYY" if there is a yellow group, and "XXX" if there is not a group
    */
-  checkDescendingDiagonals() {}
+  checkDescendingDiagonals() {
+    for (let y = 4; y < 7; y++) {
+      for (let x = 0; x < 4; x++) {
+        let state = this.#board[y][x];
+        let itsCertain = state == "PPP" || state == "YYY";
+        let thereIsAGroup =
+          this.#board[y][x] == this.#board[y + 1][x + 1] &&
+          this.#board[y][x] == this.#board[y + 2][x + 2] &&
+          this.#board[y][x] == this.#board[y + 3][x + 3];
+        let noProppedPieces =
+          this.noProppedPiece(x, y + 1) &&
+          this.noProppedPiece(x + 1, y + 2) &&
+          this.noProppedPiece(x + 2, y + 3) &&
+          this.noProppedPiece(x + 3, y + 4);
+        if (thereIsAGroup && itsCertain && noProppedPieces) {
+          return state;
+        }
+      }
+    }
+    return "XXX";
+  }
 
   /**
    * This function calculates where the turnInProgress should be drawn above the board
@@ -607,10 +627,10 @@ let board = [
   ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
   ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
   ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
-  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
-  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
-  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
-  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
+  ["YYY", "XXX", "XXX", "PPP", "XXX", "XXX", "XXX"],
+  ["PPP", "YYY", "XXX", "YYY", "PPP", "XXX", "XXX"],
+  ["YYY", "PPP", "YYY", "PPP", "YYY", "PPP", "XXX"],
+  ["PPP", "PPP", "PPP", "YYY", "PPP", "YYY", "PPP"],
 ];
 
 let game = new Game();
@@ -629,7 +649,7 @@ instructions.addEventListener("click", function (e) {
 
 right.addEventListener("click", function (e) {
   game.reactToRightButton();
-  console.log(game.checkAscendingDiagonals());
+  console.log(game.checkDescendingDiagonals());
 });
 
 left.addEventListener("click", function (e) {
