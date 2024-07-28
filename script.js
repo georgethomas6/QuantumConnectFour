@@ -89,6 +89,22 @@ class TurnInProgress {
     this.#canModifyState = truthValue;
   }
 
+  /**
+   * Sets the value of column to the parameter
+   * @param {int} col
+   */
+  set column(col) {
+    this.#column = col;
+  }
+
+  /**
+   * Sets the value of color to the parameter
+   * @param {string} color
+   */
+  set color(color) {
+    this.#color = color;
+  }
+
   //FUNCTIONS
 
   /**
@@ -130,6 +146,7 @@ class TurnInProgress {
 class Game {
   #board; // A 10 x 7 array of strings, each representing a cell in the board
   #turnInProgress; // the move that is in the process of being made
+  #gameState;
   #graphics;
   constructor() {
     //initalize blank board
@@ -140,6 +157,7 @@ class Game {
     }
     this.#turnInProgress = new TurnInProgress("purple");
     this.#graphics = new Graphics();
+    this.#gameState = []; // this will be an array of strings
   }
 
   //GETTERS
@@ -301,20 +319,74 @@ class Game {
     return "XXX";
   }
 
-/**
- * Checks to see if the game has been drawn
- * @returns true if the game has not been drawn, false otherwise
- */
-  isDrawn(){
+  /**
+   * Checks to see if the game has been drawn
+   * @returns true if the game has not been drawn, false otherwise
+   */
+  isDrawn() {
     let count = 0;
-    for (let y = 9; y > 3; y--){
-      for (let x = 0; x < 7; x++){
-        if (this.#board[y][x] == "XXX"){
+    for (let y = 9; y > 3; y--) {
+      for (let x = 0; x < 7; x++) {
+        if (this.#board[y][x] == "XXX") {
           count++;
         }
       }
     }
     return count == 42;
+  }
+
+  /**
+   * Changes the turn
+   */
+  changeTurn() {
+    this.#turnInProgress.canModifyState = true;
+    this.#turnInProgress.column = 3;
+    this.#turnInProgress.firstPlacement = -1;
+    this.#turnInProgress.secondPlacement = -1;
+    if (this.#turnInProgress.color == "purple") {
+      this.#turnInProgress.color = "yellow";
+    } else {
+      this.#turnInProgress.color = "purple";
+    }
+  }
+
+  /**
+   * Places a piece on the board
+   * @returns "done" if the turn is over, if not it returns "notDone"
+   */
+  place() {
+    let column = this.#turnInProgress.column;
+    let row = this.firstOpenRow(column);
+    let state = this.#turnInProgress.state;
+    let validClassicMove = state == "certain" && row >= 4;
+    let validQuantumMove = state != "certain" && row >= 2;
+    let isValid = validClassicMove || validQuantumMove;
+    if (isValid) {
+      if (state == "certain") {
+        this.placeCertainPiece();
+        return "done";
+      } else if (state == "horizontal") {
+      }
+    }
+  }
+
+  placeHorizontalPiece() {
+    let column = this.#turnInProgress.column;
+    let row = this.firstOpenRow(column);
+  }
+
+  /**
+   * Places a certain piece on the board
+   */
+  placeCertainPiece() {
+    let column = this.#turnInProgress.column;
+    let row = this.firstOpenRow(column);
+    let color = this.#turnInProgress.color;
+    if (color == "purple") {
+      this.#board[row][column] = "PPP";
+    } else {
+      this.#board[row][column] = "YYY";
+    }
   }
 
   /**
@@ -326,6 +398,7 @@ class Game {
     let depth = firstOpenRow >= 4 ? 3 : firstOpenRow;
     return depth;
   }
+
   /**
    * Returns the FIRST open row on the board in the given column.
    * @param column -> must be an integer
@@ -358,6 +431,7 @@ class Game {
       this.#turnInProgress.state
     );
   }
+
   /**
    * Handles a right button click.
    */
@@ -365,7 +439,7 @@ class Game {
     this.#turnInProgress.incrementPosition();
     this.#graphics.clearCanvasGrey();
     this.#graphics.drawGridLines();
-    this.#graphics.drawPiece(this.#board);
+    this.#graphics.drawPieces(this.#board);
     this.#graphics.drawTurnInProgress(
       this.#turnInProgress.column,
       this.turnInProgressDepth(),
@@ -382,7 +456,7 @@ class Game {
     this.#turnInProgress.decrementPosition();
     this.#graphics.clearCanvasGrey();
     this.#graphics.drawGridLines();
-    this.#graphics.drawPiece(this.#board);
+    this.#graphics.drawPieces(this.#board);
     this.#graphics.drawTurnInProgress(
       this.#turnInProgress.column,
       this.turnInProgressDepth(),
@@ -406,7 +480,19 @@ class Game {
    * Handles a place button click
    */
   reactToPlaceButton() {
-    //TODO
+    if (this.place() == "done") {
+      this.changeTurn();
+    }
+    this.#graphics.clearCanvasGrey();
+    this.#graphics.drawGridLines();
+    this.#graphics.drawPieces(this.#board);
+    this.#graphics.drawTurnInProgress(
+      this.#turnInProgress.column,
+      this.turnInProgressDepth(this.#turnInProgress.column),
+      this.#turnInProgress.placement1,
+      this.#turnInProgress.color,
+      this.#turnInProgress.state
+    );
   }
 
   /**
@@ -654,16 +740,16 @@ class Graphics {
 }
 
 let board = [
-  ["YYY", "YYY", "YYY", "YYY", "YYY", "YYY", "YYY"],
-  ["YYY", "YYY", "YYY", "YYY", "YYY", "YYY", "YYY"],
-  ["YYY", "YYY", "YYY", "YYY", "YYY", "YYY", "YYY"],
-  ["YYY", "YYY", "YYY", "YYY", "YYY", "YYY", "YYY"],
-  ["YYY", "YYY", "YYY", "YYY", "YYY", "YYY", "YYY"],
-  ["YYY", "YYY", "YYY", "YYY", "YYY", "YYY", "YYY"],
-  ["YYY", "YYY", "YYY", "YYY", "YYY", "YYY", "YYY"],
-  ["YYY", "YYY", "YYY", "YYY", "YYY", "YYY", "YYY"],
-  ["YYY", "YYY", "YYY", "YYY", "YYY", "YYY", "YYY"],
-  ["YYY", "YYY", "YYY", "YYY", "YYY", "YYY", "YYY"]
+  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
+  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
+  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
+  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
+  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
+  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
+  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
+  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
+  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
+  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
 ];
 
 let game = new Game();
