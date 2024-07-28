@@ -1,150 +1,133 @@
-class Turn {
-  #purplesTurn = true; // true if it is red's turn, false if it is yellow's turn
-  #position = 3; // the position of the piece
-  #inHorizontalState = false; // true if the piece is in horizontal state
-  #inVerticalState = false; // true if the piece is in vertical state
-  #isCertain = true; // true if the piece is certain, false if the piece is not certain
-  #turnsTilMeasurement = 0; // if turns til meaasurement is greater than 3 then the piece has been measured
-  #column1; // the first column a move will be placed into
-  #column2; // the second column a move will be placed into
-  constructor() {}
+class TurnInProgress {
+  #color; // Either purple or yellow
+  #column; // where the piece should be drawn by drawTurnInProgress function i.e. where it is prior to being placed
+  #state; // either "certain", "vertical" or "horizontal"
+  #firstPlacement; // the first vector in the superposition
+  #secondPlacement; // the second vector in the superposition
+  #canModifyState; // boolean true if the player can still change the state, false if the player has played half a super position
 
   /**
-   * @returns #purplesTurn
+   * Constructs a TurnInProgress
+   * @param  color -> color of the piece, should only be "purple" or "yellow"
    */
-  get purplesTurn() {
-    return this.#purplesTurn;
+  constructor(color) {
+    this.#color = color;
+    this.#column = 3;
+    this.#state = "certain";
+    this.#canModifyState = true;
+  }
+
+  //Getters
+
+  /**
+   * @return (int) column
+   */
+  get column() {
+    return this.#column;
   }
 
   /**
-   * @returns #position
+   * @return (string) state
    */
-  get position() {
-    return this.#position;
+  get state() {
+    return this.#state;
   }
 
   /**
-   * @returns #horizontalState
+   * @return (string) color
    */
-  get horizontalState() {
-    return this.#inHorizontalState;
+  get color() {
+    return this.#color;
   }
 
   /**
-   * @returns #verticalState
+   * @return (int) firstPlacement
    */
-  get verticalState() {
-    return this.#inVerticalState;
+  get firstPlacement() {
+    return this.#firstPlacement;
   }
 
   /**
-   * @returns #certain
+   * @return (int) secondPlacement
    */
-  get certain() {
-    return this.#isCertain;
+  get secondPlacement() {
+    return this.#secondPlacement;
   }
 
   /**
-   * @returns #purplesTurn
+   * @return (bool) canModifyState
    */
-  get turnsTilMeasurement() {
-    return this.#turnsTilMeasurement;
+  get canModifyState() {
+    return this.#canModifyState;
+  }
+
+  //SETTERS
+
+  /**
+   * Sets the value of the firstPlacement to the parameter
+   * @param (int) column to set firstPlacement equal to
+   */
+  set firstPlacement(col) {
+    this.#firstPlacement = col;
   }
 
   /**
-   * @returns #column1
+   * Sets the value of the secondPlacement to the parameter
+   * @param (int) column to set secondPlacement equal to
    */
-  get column1() {
-    return this.#column1;
+  set secondPlacement(col) {
+    this.#secondPlacement = col;
   }
 
   /**
-   * @returns #column2
+   * Sets the value of canModifyState to the parameter
+   * @param (bool)
    */
-  get column2() {
-    return this.#column2;
+  set canModifyState(truthValue) {
+    this.#canModifyState = truthValue;
   }
 
-  //setters
+  //FUNCTIONS
 
   /**
-   * Initializes column1 to the value of col
-   * @param col -> this column to initialize column1 to
-   */
-  set column1(col) {
-    this.#column1 = col;
-  }
-
-  /**
-   * Initializes column2 to the value of col
-   * @param col -> this column to initialize column2 to
-   */
-  set column2(col) {
-    this.#column2 = col;
-  }
-
-  /**
-   * Changes the state of the move. isCertain -> inVerticalState -> inHorizontalState -> isCertain
-   */
-  changeState() {
-    if (this.#isCertain) {
-      this.#isCertain = false;
-      this.#inVerticalState = true;
-    } else if (this.#inVerticalState) {
-      this.#inVerticalState = false;
-      this.#inHorizontalState = true;
-    } else if (this.#inHorizontalState) {
-      this.#inHorizontalState = false;
-      this.#isCertain = true;
-    }
-  }
-
-  /**
-   * Increments the turnsTilMeasure field
-   */
-  incrementTurnsTilMeasure() {
-    this.#turnsTilMeasurement++;
-  }
-
-  /**
-   * Increments the position
-   * @returns void
+   * Increments the position of the TurnInProgress. Wraps if the positon is greater than 6
    */
   incrementPosition() {
-    this.#position++;
-    if (this.#position > 6) {
-      this.#position = 0;
+    this.#column++;
+    let needsToWrap = this.#column > 6;
+    if (needsToWrap) {
+      this.#column = 0;
     }
   }
 
   /**
-   * Decrements the position
-   * @returns void
+   * Decrements the position of the TurnInProgress. Wraps if the positon is less than 0
    */
   decrementPosition() {
-    this.#position--;
-    if (this.#position < 0) {
-      this.#position = 6;
+    this.#column--;
+    let needsToWrap = this.#column < 0;
+    if (needsToWrap) {
+      this.#column = 6;
     }
   }
 
   /**
-   * Sets the value of column1 to the current position if it has not been initialized, otherwise it initializes column2
-   * @param column -> the int we want to initialize column1 or column2
+   * Changes the state of the TurnInProgess. certain --> horizontal --> vertical --> certain
    */
-  place(column) {
-    this.incrementTurnsTilMeasure();
-    if (this.#column1 == null) {
-      this.#column1 = column;
-    } else {
-      this.#column2 = column;
+  changeState() {
+    if (this.#state == "certain") {
+      this.#state = "horizontal";
+    } else if (this.#state == "horizontal") {
+      this.#state = "vertical";
+    } else if ((this.#state = "vertical")) {
+      this.#state = "certain";
     }
   }
 }
 
 class Game {
   #board; // A 10 x 7 array of strings, each representing a cell in the board
-  #moveInProgress; // the move that is in the process of being made
+  #turnInProgress; // the move that is in the process of being made
   constructor() {
     //initalize blank board
     this.#board = [];
@@ -152,11 +135,10 @@ class Game {
       let row = ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"];
       this.#board.push(row);
     }
-    console.log(this.#board[0]);
-    this.#moveInProgress = new Turn();
+    this.#turnInProgress = new TurnInProgress("purple");
   }
 
-  //getters
+  //GETTERS
 
   /**
    * @return #board
@@ -168,8 +150,8 @@ class Game {
   /**
    * @return #moveInProgress
    */
-  get moveInProgress() {
-    return this.#moveInProgress;
+  get turnInProgress() {
+    return this.#turnInProgress;
   }
 
   // GAME FUNCTIONS
@@ -190,6 +172,46 @@ class Game {
 
     return depth;
   }
+
+  /**
+   * Handles a right button click.
+   */
+  reactToRightButton(){
+    this.#turnInProgress.incrementPosition();
+  }
+
+  /**
+   * Handles a left button click.
+   */
+  reactToLeftButton(){
+    this.#turnInProgress.decrementPosition();
+  }
+
+  /**
+   * Handles a state button click.
+   */
+  reactToStateButton(){
+    let canModifyState = this.#turnInProgress.canModifyState;
+    if (canModifyState) {
+      this.#turnInProgress.changeState;
+    }
+  }
+
+  /**
+   * Handles a place button click
+  */
+  reactToPlaceButton(){
+
+  }
+
+  /**
+   * Handles a restart button click
+   */
+  reactToRestartButton(){
+
+  }
+  
+
 }
 
 //GRAPHICS FUNCTIONS ARE BELOW HERE
@@ -419,9 +441,9 @@ const board = [
   ["YYY", "YXX", "PPP", "YXX", "XXP", "XXX", "XXX"],
 ];
 
-let move = new Turn();
+
 let game = new Game();
-console.log(game.firstOpenRow(0));
+
 clearCanvasGrey();
 drawGridLines();
 drawPieces(board);
@@ -438,36 +460,24 @@ instructions.addEventListener("click", function (e) {
 });
 
 right.addEventListener("click", function (e) {
-  move.incrementPosition();
-  console.log(move.position);
+game.reactToRightButton();
+console.log("Column was incremented to " + game.turnInProgress.column);
+
 });
 
 left.addEventListener("click", function (e) {
-  move.decrementPosition();
-  console.log(move.position);
+  game.reactToLeftButton();
+  console.log("Column was decremented to " + game.turnInProgress.column);
 });
 
 state.addEventListener("click", function (e) {
-  move.changeState();
-  if (move.certain) {
-    console.log("Certain");
-  } else if (move.verticalState) {
-    console.log("Vertical State");
-  } else if (move.horizontalState) {
-    console.log("horizontal state");
-  }
+  game.reactToStateButton();
 });
 
 place.addEventListener("click", function (e) {
-  if (move.column1 == null) {
-    move.place(move.position);
-  } else if (move.column2 == null) {
-    move.place(move.position);
-  }
-  console.log(move.column1 + " this is column 1");
-  if (move.column2 != null) {
-    console.log(move.column2 + " this is column 2");
-  }
+  game.reactToPlaceButton();
 });
 
-restart.addEventListener("click", function (e) {});
+restart.addEventListener("click", function (e) {
+  game.reactToRestartButton();
+});
