@@ -285,6 +285,22 @@ class Game {
   }
 
   /**
+   * Checks to see if the game has been won
+   * @returns "PPP" if purple has won the game, "YYY" if yellow has won the game, "XXX" if there game has not been won
+   */
+  checkWinner() {
+    if (this.checkColumns() != "XXX") {
+      return this.checkColumns();
+    } else if (this.checkRows() != "XXX") {
+      return this.checkRows();
+    } else if (this.checkAscendingDiagonals() != "XXX") {
+      return this.checkAscendingDiagonals();
+    } else if (this.checkDescendingDiagonals() != "XXX") {
+      return this.checkDescendingDiagonals();
+    }
+    return "XXX";
+  }
+  /**
    * This function calculates where the turnInProgress should be drawn above the board
    * @return (int)
    */
@@ -627,15 +643,16 @@ let board = [
   ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
   ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
   ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
-  ["YYY", "XXX", "XXX", "PPP", "XXX", "XXX", "XXX"],
-  ["PPP", "YYY", "XXX", "YYY", "PPP", "XXX", "XXX"],
-  ["YYY", "PPP", "YYY", "PPP", "YYY", "PPP", "XXX"],
-  ["PPP", "PPP", "PPP", "YYY", "PPP", "YYY", "PPP"],
+  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
+  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
+  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
+  ["XXX", "PPP", "PPP", "PPP", "PPP", "XXX", "XXX"],
 ];
 
 let game = new Game();
 game.board = board;
 game.start();
+
 const right = document.getElementById("right");
 const left = document.getElementById("left");
 const state = document.getElementById("state");
@@ -649,7 +666,7 @@ instructions.addEventListener("click", function (e) {
 
 right.addEventListener("click", function (e) {
   game.reactToRightButton();
-  console.log(game.checkDescendingDiagonals());
+  console.log(game.checkWinner());
 });
 
 left.addEventListener("click", function (e) {
