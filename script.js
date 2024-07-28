@@ -5,8 +5,8 @@ class Turn {
   #inVerticalState = false; // true if the piece is in vertical state
   #isCertain = true; // true if the piece is certain, false if the piece is not certain
   #turnsTilMeasurement = 0; // if turns til meaasurement is greater than 3 then the piece has been measured
-  #column1;
-  #column2;
+  #column1; // the first column a move will be placed into
+  #column2; // the second column a move will be placed into
   constructor() {}
 
   /**
@@ -84,25 +84,25 @@ class Turn {
   }
 
   /**
-   * Changes the state of the move. isCertain -> inVerticalState -> inHorizontalState -> isCertain 
+   * Changes the state of the move. isCertain -> inVerticalState -> inHorizontalState -> isCertain
    */
   changeState() {
-    if (this.#isCertain){
-        this.#isCertain = false;
-        this.#inVerticalState = true;
-    } else if (this.#inVerticalState){
-        this.#inVerticalState = false;
-        this.#inHorizontalState = true;
-    } else if (this.#inHorizontalState){
-        this.#inHorizontalState = false;
-        this.#isCertain = true;
+    if (this.#isCertain) {
+      this.#isCertain = false;
+      this.#inVerticalState = true;
+    } else if (this.#inVerticalState) {
+      this.#inVerticalState = false;
+      this.#inHorizontalState = true;
+    } else if (this.#inHorizontalState) {
+      this.#inHorizontalState = false;
+      this.#isCertain = true;
     }
   }
 
   /**
    * Increments the turnsTilMeasure field
    */
-  incrementTurnsTilMeasure(){
+  incrementTurnsTilMeasure() {
     this.#turnsTilMeasurement++;
   }
 
@@ -140,32 +140,57 @@ class Turn {
       this.#column2 = column;
     }
   }
-
 }
 
 class Game {
   #board; // A 10 x 7 array of strings, each representing a cell in the board
   #moveInProgress; // the move that is in the process of being made
   constructor() {
-    board = initBoard();
-    const moveInProgress = new Turn();
-  }
-}
-
-/**
- * Initializes a 7 x 10 array of strings "XXX"
- */
-function initBoard() {
-  board = new Array();
-  for (let y = 0; y < 7; y++) {
-    row = new Array();
-    for (let x = 0; x < 11; x++) {
-      row("XXX");
+    //initalize blank board
+    this.#board = [];
+    for (let y = 0; y < 10; y++) {
+      let row = ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"];
+      this.#board.push(row);
     }
-    board(row);
+    console.log(this.#board[0]);
+    this.#moveInProgress = new Turn();
+  }
+
+  //getters
+
+  /**
+   * @return #board
+   */
+  get board() {
+    return this.#board;
+  }
+
+  /**
+   * @return #moveInProgress
+   */
+  get moveInProgress() {
+    return this.#moveInProgress;
+  }
+
+  // GAME FUNCTIONS
+
+  /**
+   * Returns the FIRST open row on the board in the given column.
+   * @param column -> must be an integer
+   * @return int
+   */
+  firstOpenRow(column) {
+    let depth = -1;
+    for (let y = 0; y < 10; y++) {
+      let spotIsEmpty = this.#board[y][column] == "XXX";
+      if (spotIsEmpty) {
+        depth++;
+      }
+    }
+
+    return depth;
   }
 }
-
 
 //GRAPHICS FUNCTIONS ARE BELOW HERE
 
@@ -379,6 +404,8 @@ function drawPieces(board) {
   }
 }
 
+// TESTING BELOW
+
 const board = [
   ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
   ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
@@ -393,6 +420,8 @@ const board = [
 ];
 
 let move = new Turn();
+let game = new Game();
+console.log(game.firstOpenRow(0));
 clearCanvasGrey();
 drawGridLines();
 drawPieces(board);
@@ -405,8 +434,8 @@ const restart = document.getElementById("restart");
 const instructions = document.getElementById("instructions");
 
 instructions.addEventListener("click", function (e) {
-    window.location.href = "instructions.html";
-})
+  window.location.href = "instructions.html";
+});
 
 right.addEventListener("click", function (e) {
   move.incrementPosition();
@@ -419,15 +448,14 @@ left.addEventListener("click", function (e) {
 });
 
 state.addEventListener("click", function (e) {
-    move.changeState();
-    if (move.certain){
-        console.log("Certain");
-
-    } else if (move.verticalState){
-        console.log("Vertical State");
-    } else if (move.horizontalState){
-        console.log("horizontal state");
-    }
+  move.changeState();
+  if (move.certain) {
+    console.log("Certain");
+  } else if (move.verticalState) {
+    console.log("Vertical State");
+  } else if (move.horizontalState) {
+    console.log("horizontal state");
+  }
 });
 
 place.addEventListener("click", function (e) {
