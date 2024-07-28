@@ -300,6 +300,23 @@ class Game {
     }
     return "XXX";
   }
+
+/**
+ * Checks to see if the game has been drawn
+ * @returns true if the game has not been drawn, false otherwise
+ */
+  isDrawn(){
+    let count = 0;
+    for (let y = 9; y > 3; y--){
+      for (let x = 0; x < 7; x++){
+        if (this.#board[y][x] == "XXX"){
+          count++;
+        }
+      }
+    }
+    return count == 42;
+  }
+
   /**
    * This function calculates where the turnInProgress should be drawn above the board
    * @return (int)
@@ -637,16 +654,16 @@ class Graphics {
 }
 
 let board = [
-  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
-  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
-  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
-  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
-  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
-  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
-  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
-  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
-  ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
-  ["XXX", "PPP", "PPP", "PPP", "PPP", "XXX", "XXX"],
+  ["YYY", "YYY", "YYY", "YYY", "YYY", "YYY", "YYY"],
+  ["YYY", "YYY", "YYY", "YYY", "YYY", "YYY", "YYY"],
+  ["YYY", "YYY", "YYY", "YYY", "YYY", "YYY", "YYY"],
+  ["YYY", "YYY", "YYY", "YYY", "YYY", "YYY", "YYY"],
+  ["YYY", "YYY", "YYY", "YYY", "YYY", "YYY", "YYY"],
+  ["YYY", "YYY", "YYY", "YYY", "YYY", "YYY", "YYY"],
+  ["YYY", "YYY", "YYY", "YYY", "YYY", "YYY", "YYY"],
+  ["YYY", "YYY", "YYY", "YYY", "YYY", "YYY", "YYY"],
+  ["YYY", "YYY", "YYY", "YYY", "YYY", "YYY", "YYY"],
+  ["YYY", "YYY", "YYY", "YYY", "YYY", "YYY", "YYY"]
 ];
 
 let game = new Game();
@@ -666,7 +683,7 @@ instructions.addEventListener("click", function (e) {
 
 right.addEventListener("click", function (e) {
   game.reactToRightButton();
-  console.log(game.checkWinner());
+  console.log(game.isDrawn());
 });
 
 left.addEventListener("click", function (e) {
