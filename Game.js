@@ -1,11 +1,12 @@
 // Game.js
-import TurnInProgress from './TurnInProgress.js';
-import Graphics from './Graphics.js';
+import TurnInProgress from "./TurnInProgress.js";
+import Graphics from "./Graphics.js";
 
 export default class Game {
   #board; // A 10 x 7 array of strings, each representing a cell in the board
   #turnInProgress; // the move that is in the process of being made
   #gameState;
+  #timeOnBoard; // A representation of how long pieces have been on the board;
   #graphics;
   constructor() {
     //initalize blank board
@@ -13,6 +14,11 @@ export default class Game {
     for (let y = 0; y < 10; y++) {
       let row = ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"];
       this.#board.push(row);
+    }
+    this.#timeOnBoard = [];
+    for (let y = 0; y < 10; y++) {
+      let row = ["0", "0", "0", "0", "0", "0", "0"];
+      this.#timeOnBoard.push(row);
     }
     this.#turnInProgress = new TurnInProgress("purple");
     this.#graphics = new Graphics();
@@ -43,6 +49,23 @@ export default class Game {
   }
 
   // GAME FUNCTIONS
+
+  /**
+   * This function updates the timeOnBoard field. If an entry is 0, the function does nothing, if the entry is non-zero, it increments that entry.
+   */
+  updateTimeOnBoard() {
+    for (let y = 0; y < 10; y++) {
+      for (let x = 0; x < 7; x++) {
+        let needToUpdateEntry = this.#board[y][x] != "XXX";
+        // If the piece is certain we will just set its time on board to four, as measure will only measure pieces who have spent exactly 3 turns on the board
+        if (this.#board[y][x] == "PPP" || this.#board[y][x] == "YYY"){
+          this.#timeOnBoard[y][x] = 4;
+        } else if (needToUpdateEntry) {
+          this.#timeOnBoard[y][x]++;
+        }
+      }
+    }
+  }
 
   /**
    * Checks for an uncertain under the pieces played in a given column
@@ -251,8 +274,8 @@ export default class Game {
   }
 
   /**
-   * If a vertical piece has not been placed during the turn, this function temporarily places a vertical piece 
-   * at the appropriate location above the board. Otherwise, it gets rid of the temporary piece and drops the pieces 
+   * If a vertical piece has not been placed during the turn, this function temporarily places a vertical piece
+   * at the appropriate location above the board. Otherwise, it gets rid of the temporary piece and drops the pieces
    * to the correct depths. Should only be called on valid moves
    * @returns "done" if the turn is over, "notDone" otherwise
    */
@@ -288,8 +311,8 @@ export default class Game {
   }
 
   /**
-   * If a horizontal piece has not been placed during the turn, this function temporarily places a horizontal piece 
-   * at the appropriate location above the board. Otherwise, it gets rid of the temporary piece and drops the pieces 
+   * If a horizontal piece has not been placed during the turn, this function temporarily places a horizontal piece
+   * at the appropriate location above the board. Otherwise, it gets rid of the temporary piece and drops the pieces
    * to the correct depths. Should only be called on valid moves
    * @returns "done" if the turn is over, "notDone" otherwise
    */
@@ -442,8 +465,16 @@ export default class Game {
    */
   reactToPlaceButton() {
     if (this.place() == "done") {
+      // Update time on board first because the place functions will set the time on board value for the new piece to 1 and we don't want to accidentally update it to 2
+      this.updateTimeOnBoard();
       this.changeTurn();
     }
+
+    console.log(" ");
+    for (let y = 0; y < 10; y++) {
+      console.log(this.#timeOnBoard[y]);
+    }
+    console.log();
 
     this.#graphics.clearCanvasGrey();
     this.#graphics.drawGridLines();
