@@ -1,10 +1,8 @@
-// TODO  TEST PLACE FUNCTION
-// TODO implement Vertical Place function
-// TODO debug state button click
-// TODO implement game loop
-// TODO implement game state
-// TODO debug all place funcitons
-// TODO debug reactToPlaceButton
+// TODO implement game loop 6.
+// TODO implement game state 4.
+// TODO debug reactToPlaceButton 3.
+// TODO implement measure 5.
+// TODO add method to check for ending somewhere so it does the thing
 
 class TurnInProgress {
   #color; // Either purple or yellow
@@ -16,7 +14,7 @@ class TurnInProgress {
 
   /**
    * Constructs a TurnInProgress
-   * @param  color -> color of the piece, should only be "purple" or "yellow"
+   * @param {string} color -> color of the piece, should only be "purple" or "yellow"
    */
   constructor(color) {
     this.#color = color;
@@ -74,24 +72,32 @@ class TurnInProgress {
   //SETTERS
 
   /**
-   * Sets the value of the firstPlacement to the parameter
-   * @param (int) column to set firstPlacement equal to
+   * Sets the value of firstPlacement to the parameter
+   * @param {int} col -> value to set firstPlacement equal to
    */
   set firstPlacement(col) {
     this.#firstPlacement = col;
   }
 
   /**
-   * Sets the value of the secondPlacement to the parameter
-   * @param (int) column to set secondPlacement equal to
+   * Sets the value of secondPlacement to the parameter
+   * @param {int} col -> to set secondPlacement equal to
    */
   set secondPlacement(col) {
     this.#secondPlacement = col;
   }
 
   /**
+   * Sets the value of the state to the parameter
+   * @param {string} state -> value we want to set state to
+   */
+  set state(state) {
+    this.#state = state;
+  }
+
+  /**
    * Sets the value of canModifyState to the parameter
-   * @param (bool)
+   * @param {bool} truthValue->  value we want to set canModifyState to
    */
   set canModifyState(truthValue) {
     this.#canModifyState = truthValue;
@@ -99,7 +105,7 @@ class TurnInProgress {
 
   /**
    * Sets the value of column to the parameter
-   * @param {int} col
+   * @param {int} col -> value we want to set column to
    */
   set column(col) {
     this.#column = col;
@@ -107,7 +113,7 @@ class TurnInProgress {
 
   /**
    * Sets the value of color to the parameter
-   * @param {string} color
+   * @param {string} color -> value we want to set color to
    */
   set color(color) {
     this.#color = color;
@@ -171,14 +177,14 @@ class Game {
   //GETTERS
 
   /**
-   * @return #board
+   * @return string[][]
    */
   get board() {
     return this.#board;
   }
 
   /**
-   * @return #moveInProgress
+   * @return TurnInProgress
    */
   get turnInProgress() {
     return this.#turnInProgress;
@@ -195,14 +201,14 @@ class Game {
 
   /**
    * Checks for an uncertain under the pieces played in a given column
-   * @param {int} col -> column to check for uncertain pieces in
+   * @param {int} column -> column to check for uncertain pieces in
    * @param {int} row -> first spot under the piece being checked in a group
    * @returns true if there are no uncertain pieces in the given column, false otherwise
    */
-  noProppedPiece(col, row) {
+  noProppedPiece(column, row) {
     while (row < 10) {
       let isCertain =
-        this.#board[row][col] == "PPP" || this.#board[row][col] == "YYY";
+        this.#board[row][column] == "PPP" || this.#board[row][column] == "YYY";
       if (!isCertain) {
         return false;
       }
@@ -212,7 +218,7 @@ class Game {
   }
 
   /**
-   * This function checks every single column for a group. No need to check for propped pieces here.
+   * This function checks every single column for a group. No need to check for propped pieces here
    * @returns "PPP" if there is a purple group, "YYY" if there is a yellow group, and "XXX" if there is not a group
    */
   checkColumns() {
@@ -233,7 +239,7 @@ class Game {
   }
 
   /**
-   * This function checks every single row for a group. In the process it makes sure no member of the group is being propped up by an uncertain piece.
+   * This function checks every single row for a group. In the process it makes sure no member of the group is being propped up by an uncertain piece
    * @returns "PPP" if there is a purple group, "YYY" if there is a yellow group, and "XXX" if there is not a group
    */
   checkRows() {
@@ -259,7 +265,7 @@ class Game {
   }
 
   /**
-   * Checks for ascending diagonal groups on the board. In the process it checks for propped pieces.
+   * Checks for ascending diagonal groups on the board. In the process it checks for propped pieces
    * @returns "PPP" if there is a purple group, "YYY" if there is a yellow group, and "XXX" if there is not a group
    */
   checkAscendingDiagonals() {
@@ -285,7 +291,7 @@ class Game {
   }
 
   /**
-   * Checks for descending diagonal groups on the board. In the process it checks for propped pieces.
+   * Checks for descending diagonal groups on the board. In the process it checks for propped pieces
    * @returns "PPP" if there is a purple group, "YYY" if there is a yellow group, and "XXX" if there is not a group
    */
   checkDescendingDiagonals() {
@@ -331,11 +337,11 @@ class Game {
    * Checks to see if the game has been drawn
    * @returns true if the game has not been drawn, false otherwise
    */
-  isDrawn() {
+  isGameDrawn() {
     let count = 0;
     for (let y = 9; y > 3; y--) {
       for (let x = 0; x < 7; x++) {
-        if (this.#board[y][x] == "XXX") {
+        if (this.#board[y][x] != "XXX") {
           count++;
         }
       }
@@ -344,13 +350,29 @@ class Game {
   }
 
   /**
-   * Changes the turn
+   * Sets the following variables to these values
+   *
+   *
+   * canModifyState = true
+   *
+   *
+   * column = 3
+   *
+   *
+   * firstPlacement = -1
+   *
+   *
+   * state = "certain"
+   *
+   *
+   * color = opposite of previous
    */
   changeTurn() {
     this.#turnInProgress.canModifyState = true;
     this.#turnInProgress.column = 3;
     this.#turnInProgress.firstPlacement = -1;
     this.#turnInProgress.secondPlacement = -1;
+    this.#turnInProgress.state = "certain";
     if (this.#turnInProgress.color == "purple") {
       this.#turnInProgress.color = "yellow";
     } else {
@@ -359,7 +381,7 @@ class Game {
   }
 
   /**
-   * Checks to see if the placement is valid. If it is it places a piece on the board.
+   * First this function checks to see if the placement is valid. If the placement was valid it places a piece in the correct state on the board
    * @returns "done" if the turn is over, if not it returns "notDone"
    */
   place() {
@@ -380,46 +402,86 @@ class Game {
         return this.placeVerticalPiece();
       }
     }
+    return "notDone";
   }
 
   /**
-   * Places a vertical piece on the board.
+   * If a vertical piece has not been placed during the turn, this function temporarily places a vertical piece 
+   * at the appropriate location above the board. Otherwise, it gets rid of the temporary piece and drops the pieces 
+   * to the correct depths. Should only be called on valid moves
    * @returns "done" if the turn is over, "notDone" otherwise
    */
   placeVerticalPiece() {
-    return "done";
-  }
-
-  /**
-   * Places a horizontal piece on the board.
-   * If a horizontal piece has not been placed on this turn, it sets the value of firstPlacement, canModifyState and resets the column value of the turnInProgress
-   * @returns "done" if the turn is over, "notDone" otherwise
-   */
-  placeHorizontalPiece() {
     let column = this.#turnInProgress.column;
-    let placement1 = this.#turnInProgress.firstPlacement;
+    let firstPlacement = this.#turnInProgress.firstPlacement;
 
-    if (placement1 == -1) {
+    if (firstPlacement == -1) {
+      // Temporarily put a piece above the board to show where it will fall
+      if (this.#turnInProgress.color == "purple") {
+        this.#board[this.turnInProgressDepth(column)][column] = "PXX";
+      } else {
+        this.#board[this.turnInProgressDepth(column)][column] = "YXX";
+      }
       this.#turnInProgress.firstPlacement = column;
       this.#turnInProgress.canModifyState = false;
       this.#turnInProgress.column = 3; // reset the column to the middle of the board
       return "notDone";
     }
 
-    let row1 = this.firstOpenRow(placement1);
+    // Get rid of temporary piece
+    this.#board[this.firstOpenRow(firstPlacement) + 1][firstPlacement] = "XXX";
+    let row1 = this.firstOpenRow(firstPlacement);
     let row2 = this.firstOpenRow(column);
     if (this.#turnInProgress.color == "purple") {
-      this.#board[row1][placement1] = "PXX";
+      this.#board[row1][firstPlacement] = "PXX";
       this.#board[row2][column] = "PXX";
     } else {
-      this.#board[row1][placement1] = "YXX";
+      this.#board[row1][firstPlacement] = "YXX";
       this.#board[row2][column] = "YXX";
     }
     return "done";
   }
 
   /**
-   * Places a certain piece on the board
+   * If a horizontal piece has not been placed during the turn, this function temporarily places a horizontal piece 
+   * at the appropriate location above the board. Otherwise, it gets rid of the temporary piece and drops the pieces 
+   * to the correct depths. Should only be called on valid moves
+   * @returns "done" if the turn is over, "notDone" otherwise
+   */
+  placeHorizontalPiece() {
+    let column = this.#turnInProgress.column;
+    let firstPlacement = this.#turnInProgress.firstPlacement;
+
+    if (firstPlacement == -1) {
+      // Temporarily put a piece above the board to show where it will fall
+      if (this.#turnInProgress.color == "purple") {
+        this.#board[this.turnInProgressDepth(column)][column] = "XXP";
+      } else {
+        this.#board[this.turnInProgressDepth(column)][column] = "XXY";
+      }
+
+      this.#turnInProgress.firstPlacement = column;
+      this.#turnInProgress.canModifyState = false;
+      this.#turnInProgress.column = 3; // reset the column to the middle of the board
+      return "notDone";
+    }
+
+    // Get rid of temporary piece
+    this.#board[this.firstOpenRow(firstPlacement) + 1][firstPlacement] = "XXX";
+    let row1 = this.firstOpenRow(firstPlacement);
+    let row2 = this.firstOpenRow(column);
+    if (this.#turnInProgress.color == "purple") {
+      this.#board[row1][firstPlacement] = "XXP";
+      this.#board[row2][column] = "XXP";
+    } else {
+      this.#board[row1][firstPlacement] = "XXY";
+      this.#board[row2][column] = "XXY";
+    }
+    return "done";
+  }
+
+  /**
+   * Places a certain piece on the board. Should only be called on valid moves
    * @returns "done"
    */
   placeCertainPiece() {
@@ -435,15 +497,11 @@ class Game {
   }
 
   /**
-   * This function calculates where the turnInProgress should be drawn above the board
-   * @param {int} column  -> column we want to find turnInProgressDepth in
-   * @return (int)
+   * This function calculates the height at which a turnInProgress should be drawnx
+   * @param {int} column -> column we want to find turnInProgressDepth in
+   * @return (int) depth
    */
   turnInProgressDepth(column) {
-    if (column == -1) {
-      return -1;
-    }
-
     let firstOpenRow = this.firstOpenRow(column);
     let depth = firstOpenRow >= 4 ? 3 : firstOpenRow;
     return depth;
@@ -452,7 +510,7 @@ class Game {
   /**
    * Returns the FIRST open row on the board in the given column.
    * @param column -> must be an integer
-   * @return int
+   * @return (int) column
    */
   firstOpenRow(column) {
     let depth = -1;
@@ -460,6 +518,8 @@ class Game {
       let spotIsEmpty = this.#board[y][column] == "XXX";
       if (spotIsEmpty) {
         depth++;
+      } else {
+        return depth;
       }
     }
 
@@ -476,15 +536,13 @@ class Game {
     this.#graphics.drawTurnInProgress(
       this.#turnInProgress.column,
       this.turnInProgressDepth(this.#turnInProgress.column),
-      this.#turnInProgress.firstPlacement,
-      this.turnInProgressDepth(this.#turnInProgress.firstPlacement),
       this.#turnInProgress.color,
       this.#turnInProgress.state
     );
   }
 
   /**
-   * Handles a right button click.
+   * Handles a right button click
    */
   reactToRightButton() {
     this.#turnInProgress.incrementPosition();
@@ -494,15 +552,13 @@ class Game {
     this.#graphics.drawTurnInProgress(
       this.#turnInProgress.column,
       this.turnInProgressDepth(this.#turnInProgress.column),
-      this.#turnInProgress.firstPlacement,
-      this.turnInProgressDepth(this.#turnInProgress.firstPlacement),
       this.#turnInProgress.color,
       this.#turnInProgress.state
     );
   }
 
   /**
-   * Handles a left button click.
+   * Handles a left button click
    */
   reactToLeftButton() {
     this.#turnInProgress.decrementPosition();
@@ -512,21 +568,18 @@ class Game {
     this.#graphics.drawTurnInProgress(
       this.#turnInProgress.column,
       this.turnInProgressDepth(this.#turnInProgress.column),
-      this.#turnInProgress.firstPlacement,
-      this.turnInProgressDepth(this.#turnInProgress.firstPlacement),
       this.#turnInProgress.color,
       this.#turnInProgress.state
     );
   }
 
   /**
-   * Handles a state button click.
+   * Handles a state button click
    */
   reactToStateButton() {
     let canModifyState = this.#turnInProgress.canModifyState;
     if (canModifyState) {
       this.#turnInProgress.changeState();
-      console.log(this.#turnInProgress.state);
     }
     this.#graphics.clearCanvasGrey();
     this.#graphics.drawGridLines();
@@ -534,8 +587,6 @@ class Game {
     this.#graphics.drawTurnInProgress(
       this.#turnInProgress.column,
       this.turnInProgressDepth(this.#turnInProgress.column),
-      this.#turnInProgress.firstPlacement,
-      this.turnInProgressDepth(this.#turnInProgress.firstPlacement),
       this.#turnInProgress.color,
       this.#turnInProgress.state
     );
@@ -555,8 +606,6 @@ class Game {
     this.#graphics.drawTurnInProgress(
       this.#turnInProgress.column,
       this.turnInProgressDepth(this.#turnInProgress.column),
-      this.#turnInProgress.firstPlacement,
-      this.turnInProgressDepth(this.#turnInProgress.firstPlacement),
       this.#turnInProgress.color,
       this.#turnInProgress.state
     );
@@ -647,18 +696,18 @@ class Graphics {
 
   /**
    * Draws a circle the color of the fillColor parameter at the specified X and Y coordinates
-   * @param xCord -> xCoordinate of circle location
-   * @param yCord -> yCoordinate of circle location
-   * @param fillColor -> color of piece, should be only red or yellow
+   * @param {float} xCoord -> xCoordinate of circle location
+   * @param {float} yCoord -> yCoordinate of circle location
+   * @param {string} fillColor -> color of piece, should be only "purple" or "yellow"
    */
-  drawPiece(xCord, yCord, fillColor) {
+  drawPiece(xCoord, yCoord, fillColor) {
     const radius = 640 / 30;
     //change the fill and stroke colors
     this.#ctx.fillStyle = fillColor;
     this.#ctx.strokeStyle = fillColor;
     //draw the circle
     this.#ctx.beginPath();
-    this.#ctx.arc(xCord, yCord, radius, 0, 2 * Math.PI);
+    this.#ctx.arc(xCoord, yCoord, radius, 0, 2 * Math.PI);
     //draw and fill the circle
     this.#ctx.fill();
     this.#ctx.stroke();
@@ -670,44 +719,44 @@ class Graphics {
 
   /**
    * Draws a piece in vertical state i.e. a piece with a vertical line running through it
-   * @param xCord -> xCoordinate of the piece
-   * @param yCord -> yCoordinate of the piece
-   * @param fillColor -> color of piece, should only be red or yellow
+   * @param {float} xCoord -> xCoordinate of circle location
+   * @param {float} yCoord -> yCoordinate of circle location
+   * @param {string} fillColor -> color of piece, should be only "purple" or "yellow"
    */
-  drawVerticalStatePiece(xCord, yCord, fillColor) {
+  drawVerticalStatePiece(xCoord, yCoord, fillColor) {
     //Highest and lowest points on the circle
-    const topY = yCord - 640 / 30 - 2;
-    const bottomY = yCord + 640 / 30 + 2;
+    const topY = yCoord - 640 / 30 - 2;
+    const bottomY = yCoord + 640 / 30 + 2;
     //draw a piece as normal
-    this.drawPiece(xCord, yCord, fillColor);
+    this.drawPiece(xCoord, yCoord, fillColor);
 
     // Draw the vertical line
     this.#ctx.beginPath();
     this.#ctx.lineWidth = 4;
-    this.#ctx.moveTo(xCord, topY);
-    this.#ctx.lineTo(xCord, bottomY);
+    this.#ctx.moveTo(xCoord, topY);
+    this.#ctx.lineTo(xCoord, bottomY);
     this.#ctx.stroke();
   }
 
   /**
    * Draws a piece in horizontal state i.e. a piece with a horizontal line running through it
-   * @param xCord -> xCoordinate of the piece
-   * @param yCord -> yCoordinate of the piece
-   * @param fillColor -> color of piece, should only be red or yellow
+   * @param {float} xCoord -> xCoordinate of circle location
+   * @param {float} yCoord -> yCoordinate of circle location
+   * @param {string} fillColor -> color of piece, should be only "purple" or "yellow"
    */
-  drawHorizontalStatePiece(xCord, yCord, fillColor) {
+  drawHorizontalStatePiece(xCoord, yCoord, fillColor) {
     //left most and right most points on the circle
-    const leftX = xCord - 640 / 30 - 2;
-    const rigthX = xCord + 640 / 30 + 2;
+    const leftX = xCoord - 640 / 30 - 2;
+    const rigthX = xCoord + 640 / 30 + 2;
 
     //draw a piece as normal
-    this.drawPiece(xCord, yCord, fillColor);
+    this.drawPiece(xCoord, yCoord, fillColor);
 
     // Draw the horizontal line
     this.#ctx.beginPath();
     this.#ctx.lineWidth = 4;
-    this.#ctx.moveTo(leftX, yCord);
-    this.#ctx.lineTo(rigthX, yCord);
+    this.#ctx.moveTo(leftX, yCoord);
+    this.#ctx.lineTo(rigthX, yCoord);
     this.#ctx.stroke();
   }
   /**
@@ -732,9 +781,9 @@ class Graphics {
 
   /**
    * This function takes string and performs the appropriate drawing on the board. Should only be called in the drawPieces function
-   * @param entry -> the string telling us what to draw on the screen
-   * @param xCoordinate -> xCoordinate of our drawing
-   * @param yCoordinate -> yCoordinate of our drawing
+   * @param {string} entry -> the string telling us what to draw on the screen
+   * @param {float} xCoordinate -> xCoordinate of our drawing
+   * @param {float} yCoordinate -> yCoordinate of our drawing
    */
   processEntry(entry, xCoordinate, yCoordinate) {
     const caseMap = this.initCaseMap();
@@ -765,7 +814,7 @@ class Graphics {
 
   /**
    * Draws the pieces on the board
-   * @param board -> the board, must be 10 x 7 array of strings
+   * @param {string[][]}board -> the board, must be 10 x 7 array of strings
    */
   drawPieces(board) {
     //draw the pieces on the board
@@ -781,58 +830,22 @@ class Graphics {
 
   /**
    * Draws the turn in progress above the board. Handles drawing all matters concerned with quantum moves in progress
-   * @param  {int} columnOne -> (int)
-   * @param  {int} rowOne -> (int)
-   * @param  {int} firstPlacement
-   * @param {int} firstPlacementDepth
-   * @param  {string} color -> (string)
-   * @param  {string} pieceState -> (string)
+   * @param  {int} column -> column to draw piece in
+   * @param  {int} row -> row to draw piece in
+   * @param  {string} color -> should only be "purple" or "yellow"
+   * @param  {string} pieceState -> should only be "certain", "vertical", or "horizontal"
    */
-  drawTurnInProgress(
-    columnOne,
-    rowOne,
-    firstPlacement,
-    firstPlacementRow,
-    color,
-    pieceState
-  ) {
-    const firstXCoordinate =
-      this.#cellWidth / 2 + this.#cellWidth * (columnOne + 1);
+  drawTurnInProgress(column, row, color, pieceState) {
+    const xCoordinate = this.#cellWidth / 2 + this.#cellWidth * (column + 1);
 
-    const firstYCoordinate =
-      this.#cellHeight / 2 + this.#cellHeight * (rowOne + 1);
-
-    const secondXCoordinate =
-      this.#cellWidth / 2 + this.#cellWidth * (firstPlacement + 1);
-
-    const secondYCoordinate =
-      this.#cellHeight / 2 + this.#cellHeight * (firstPlacementRow + 1);
+    const yCoordinate = this.#cellHeight / 2 + this.#cellHeight * (row + 1);
 
     if (pieceState == "certain") {
-      this.drawPiece(firstXCoordinate, firstYCoordinate, color);
-      return;
+      this.drawPiece(xCoordinate, yCoordinate, color);
     } else if (pieceState == "horizontal") {
-      if (firstPlacement == -1) {
-        this.drawHorizontalStatePiece(
-          firstXCoordinate,
-          firstYCoordinate,
-          color
-        );
-        return;
-      }
-      this.drawHorizontalStatePiece(
-        secondXCoordinate,
-        secondYCoordinate,
-        color
-      );
-      return;
+      this.drawHorizontalStatePiece(xCoordinate, yCoordinate, color);
     } else if (pieceState == "vertical") {
-      if (firstPlacement == -1) {
-        this.drawVerticalStatePiece(firstXCoordinate, firstYCoordinate, color);
-        return;
-      }
-      this.drawVerticalStatePiece(secondXCoordinate, secondYCoordinate, color);
-      return;
+      this.drawVerticalStatePiece(xCoordinate, yCoordinate, color);
     }
   }
 }
@@ -867,7 +880,6 @@ instructions.addEventListener("click", function (e) {
 
 right.addEventListener("click", function (e) {
   game.reactToRightButton();
-  console.log(game.isDrawn());
 });
 
 left.addEventListener("click", function (e) {
