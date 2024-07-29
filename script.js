@@ -1,3 +1,11 @@
+// TODO  TEST PLACE FUNCTION
+// TODO implement Vertical Place function
+// TODO debug state button click
+// TODO implement game loop
+// TODO implement game state
+// TODO debug all place funcitons
+// TODO debug reactToPlaceButton
+
 class TurnInProgress {
   #color; // Either purple or yellow
   #column; // where the piece should be drawn by drawTurnInProgress function i.e. where it is prior to being placed
@@ -350,14 +358,6 @@ class Game {
     }
   }
 
-  // TODO  TEST PLACE FUNCTION
-  // TODO implement Vertical Place function
-  // TODO debug state button click
-  // TODO implement game loop
-  // TODO implement game state
-  // TODO debug all place funcitons
-  // TODO debug reactToPlaceButton
-
   /**
    * Checks to see if the placement is valid. If it is it places a piece on the board.
    * @returns "done" if the turn is over, if not it returns "notDone"
@@ -366,9 +366,10 @@ class Game {
     let column = this.#turnInProgress.column;
     let row = this.firstOpenRow(column);
     let state = this.#turnInProgress.state;
+    let firstPlacement = this.#turnInProgress.firstPlacement;
     let validClassicMove = state == "certain" && row >= 4;
     let validQuantumMove =
-      state != "certain" && row >= 2 && placement1 != column;
+      state != "certain" && row >= 2 && firstPlacement != column;
     let isValid = validClassicMove || validQuantumMove;
     if (isValid) {
       if (state == "certain") {
@@ -386,7 +387,6 @@ class Game {
    * @returns "done" if the turn is over, "notDone" otherwise
    */
   placeVerticalPiece() {
-
     return "done";
   }
 
@@ -436,10 +436,15 @@ class Game {
 
   /**
    * This function calculates where the turnInProgress should be drawn above the board
+   * @param {int} column  -> column we want to find turnInProgressDepth in
    * @return (int)
    */
-  turnInProgressDepth() {
-    let firstOpenRow = this.firstOpenRow(this.#turnInProgress.column);
+  turnInProgressDepth(column) {
+    if (column == -1) {
+      return -1;
+    }
+
+    let firstOpenRow = this.firstOpenRow(column);
     let depth = firstOpenRow >= 4 ? 3 : firstOpenRow;
     return depth;
   }
@@ -470,8 +475,9 @@ class Game {
     this.#graphics.drawPieces(this.#board);
     this.#graphics.drawTurnInProgress(
       this.#turnInProgress.column,
-      this.turnInProgressDepth(),
+      this.turnInProgressDepth(this.#turnInProgress.column),
       this.#turnInProgress.firstPlacement,
+      this.turnInProgressDepth(this.#turnInProgress.firstPlacement),
       this.#turnInProgress.color,
       this.#turnInProgress.state
     );
@@ -487,8 +493,9 @@ class Game {
     this.#graphics.drawPieces(this.#board);
     this.#graphics.drawTurnInProgress(
       this.#turnInProgress.column,
-      this.turnInProgressDepth(),
+      this.turnInProgressDepth(this.#turnInProgress.column),
       this.#turnInProgress.firstPlacement,
+      this.turnInProgressDepth(this.#turnInProgress.firstPlacement),
       this.#turnInProgress.color,
       this.#turnInProgress.state
     );
@@ -504,8 +511,9 @@ class Game {
     this.#graphics.drawPieces(this.#board);
     this.#graphics.drawTurnInProgress(
       this.#turnInProgress.column,
-      this.turnInProgressDepth(),
+      this.turnInProgressDepth(this.#turnInProgress.column),
       this.#turnInProgress.firstPlacement,
+      this.turnInProgressDepth(this.#turnInProgress.firstPlacement),
       this.#turnInProgress.color,
       this.#turnInProgress.state
     );
@@ -517,10 +525,21 @@ class Game {
   reactToStateButton() {
     let canModifyState = this.#turnInProgress.canModifyState;
     if (canModifyState) {
-      this.#turnInProgress.changeState;
+      this.#turnInProgress.changeState();
+      console.log(this.#turnInProgress.state);
     }
+    this.#graphics.clearCanvasGrey();
+    this.#graphics.drawGridLines();
+    this.#graphics.drawPieces(this.#board);
+    this.#graphics.drawTurnInProgress(
+      this.#turnInProgress.column,
+      this.turnInProgressDepth(this.#turnInProgress.column),
+      this.#turnInProgress.firstPlacement,
+      this.turnInProgressDepth(this.#turnInProgress.firstPlacement),
+      this.#turnInProgress.color,
+      this.#turnInProgress.state
+    );
   }
-
 
   /**
    * Handles a place button click
@@ -528,34 +547,16 @@ class Game {
   reactToPlaceButton() {
     if (this.place() == "done") {
       this.changeTurn();
-      this.#graphics.clearCanvasGrey();
-      this.#graphics.drawGridLines();
-      this.#graphics.drawPieces(this.#board);
-      //TODO turn in progress is not going to be drawn correctly if it is written like this
-      this.#graphics.drawTurnInProgress(
-        this.#turnInProgress.column,
-        this.turnInProgressDepth(this.#turnInProgress.column),
-        this.#turnInProgress.placement1,
-        this.#turnInProgress.color,
-        this.#turnInProgress.state
-      );
-      return;
     }
+
     this.#graphics.clearCanvasGrey();
     this.#graphics.drawGridLines();
     this.#graphics.drawPieces(this.#board);
-    //TODO turn in progress is not going to be drawn correctly if it is written like this
-    this.#graphics.drawTurnInProgress(
-      this.#turnInProgress.column,
-      this.turnInProgressDepth(this.#turnInProgress.placement1),
-      this.#turnInProgress.placement1,
-      this.#turnInProgress.color,
-      this.#turnInProgress.state
-    );
     this.#graphics.drawTurnInProgress(
       this.#turnInProgress.column,
       this.turnInProgressDepth(this.#turnInProgress.column),
-      this.#turnInProgress.placement1,
+      this.#turnInProgress.firstPlacement,
+      this.turnInProgressDepth(this.#turnInProgress.firstPlacement),
       this.#turnInProgress.color,
       this.#turnInProgress.state
     );
@@ -779,28 +780,59 @@ class Graphics {
   }
 
   /**
-   * Draws the turn in progress above the board
-   * @param  {int} column -> (int)
-   * @param  {int} row -> (int)
-   * @param  {int} placement1
+   * Draws the turn in progress above the board. Handles drawing all matters concerned with quantum moves in progress
+   * @param  {int} columnOne -> (int)
+   * @param  {int} rowOne -> (int)
+   * @param  {int} firstPlacement
+   * @param {int} firstPlacementDepth
    * @param  {string} color -> (string)
    * @param  {string} pieceState -> (string)
    */
-  drawTurnInProgress(column, row, placement1, color, pieceState) {
-    const xCoordinate = this.#cellWidth / 2 + this.#cellWidth * (column + 1);
-    const yCoordinate = this.#cellHeight / 2 + this.#cellHeight * (row + 1);
+  drawTurnInProgress(
+    columnOne,
+    rowOne,
+    firstPlacement,
+    firstPlacementRow,
+    color,
+    pieceState
+  ) {
+    const firstXCoordinate =
+      this.#cellWidth / 2 + this.#cellWidth * (columnOne + 1);
+
+    const firstYCoordinate =
+      this.#cellHeight / 2 + this.#cellHeight * (rowOne + 1);
+
+    const secondXCoordinate =
+      this.#cellWidth / 2 + this.#cellWidth * (firstPlacement + 1);
+
+    const secondYCoordinate =
+      this.#cellHeight / 2 + this.#cellHeight * (firstPlacementRow + 1);
+
     if (pieceState == "certain") {
-      this.drawPiece(xCoordinate, yCoordinate, color);
+      this.drawPiece(firstXCoordinate, firstYCoordinate, color);
+      return;
     } else if (pieceState == "horizontal") {
-      if (placement1 != -1) {
-        this.drawHorizontalStatePiece(xCoordinate, yCoordinate, color);
+      if (firstPlacement == -1) {
+        this.drawHorizontalStatePiece(
+          firstXCoordinate,
+          firstYCoordinate,
+          color
+        );
+        return;
       }
-      this.drawHorizontalStatePiece(xCoordinate, yCoordinate, color);
+      this.drawHorizontalStatePiece(
+        secondXCoordinate,
+        secondYCoordinate,
+        color
+      );
+      return;
     } else if (pieceState == "vertical") {
-      if (placement1 != -1) {
-        this.drawVerticalStatePiece(xCoordinate, yCoordinate, color);
+      if (firstPlacement == -1) {
+        this.drawVerticalStatePiece(firstXCoordinate, firstYCoordinate, color);
+        return;
       }
-      this.drawVerticalStatePiece(xCoordinate, yCoordinate, color);
+      this.drawVerticalStatePiece(secondXCoordinate, secondYCoordinate, color);
+      return;
     }
   }
 }
