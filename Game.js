@@ -28,17 +28,24 @@ export default class Game {
   //GETTERS
 
   /**
-   * @return string[][]
+   * @returns string[][]
    */
   get board() {
     return this.#board;
   }
 
   /**
-   * @return TurnInProgress
+   * @returns TurnInProgress
    */
   get turnInProgress() {
     return this.#turnInProgress;
+  }
+
+  /**
+   * @returns string[]
+   */
+  get gameState(){
+    return this.#gameState;
   }
 
   /**
@@ -46,6 +53,14 @@ export default class Game {
    */
   set board(board) {
     this.#board = board;
+  }
+
+  /**
+   * Sets the game state to the param.
+   * @param {int} state
+   */
+  set gameState(state) {
+    this.#gameState = state;
   }
 
   // GAME FUNCTIONS
@@ -58,13 +73,55 @@ export default class Game {
       for (let x = 0; x < 7; x++) {
         let needToUpdateEntry = this.#board[y][x] != "XXX";
         // If the piece is certain we will just set its time on board to four, as measure will only measure pieces who have spent exactly 3 turns on the board
-        if (this.#board[y][x] == "PPP" || this.#board[y][x] == "YYY"){
+        if (this.#board[y][x] == "PPP" || this.#board[y][x] == "YYY") {
           this.#timeOnBoard[y][x] = 4;
         } else if (needToUpdateEntry) {
           this.#timeOnBoard[y][x]++;
         }
       }
     }
+  }
+
+  /**
+   * This function updates the gameState. It modifies the game state based on the moves it was given. If it
+   * is given two different moves it updates behaves like it is responding to a quantum move. If it is given
+   * the same move it behaves like it is responding to a certain move.
+   * @param {int} firstPlacement
+   * @param {int} secondPlacement
+   */
+  updateGameState(firstPlacement, secondPlacement) {
+    let newGameState = [];
+    let wasCertainMove = firstPlacement == secondPlacement;
+    let gameStateEmpty = this.#gameState.length == 0;
+    if (gameStateEmpty){
+      if (wasCertainMove) {
+        let vectorOne = firstPlacement.toString();
+        newGameState.push(vectorOne);
+        this.#gameState = newGameState;
+      } else {
+        let vectorOne = firstPlacement.toString();
+        let vectorTwo = secondPlacement.toString();
+        newGameState.push(vectorOne);
+        newGameState.push(vectorTwo); 
+        this.#gameState = newGameState;
+      }
+      return;
+    }
+
+    if (wasCertainMove) {
+      for (let i = 0; i < this.#gameState.length; i++) {
+        let vectorOne = this.#gameState[i].concat(firstPlacement.toString());
+        newGameState.push(vectorOne);
+      }
+    } else {
+      for (let i = 0; i < this.#gameState.length; i++) {
+        let vectorOne = this.#gameState[i].concat(firstPlacement.toString());
+        let vectorTwo = this.#gameState[i].concat(secondPlacement.toString());
+        newGameState.push(vectorOne);
+        newGameState.push(vectorTwo);
+      }
+    }
+    this.#gameState = newGameState;
   }
 
   /**
@@ -298,6 +355,8 @@ export default class Game {
 
     // Get rid of temporary piece
     this.#board[this.firstOpenRow(firstPlacement) + 1][firstPlacement] = "XXX";
+
+    // Make placements on the board
     let row1 = this.firstOpenRow(firstPlacement);
     let row2 = this.firstOpenRow(column);
     if (this.#turnInProgress.color == "purple") {
@@ -307,6 +366,8 @@ export default class Game {
       this.#board[row1][firstPlacement] = "YXX";
       this.#board[row2][column] = "YXX";
     }
+    //Update gameState
+    this.updateGameState(firstPlacement, column);
     return "done";
   }
 
@@ -345,6 +406,8 @@ export default class Game {
       this.#board[row1][firstPlacement] = "XXY";
       this.#board[row2][column] = "XXY";
     }
+    //Update gameState
+    this.updateGameState(firstPlacement, column);
     return "done";
   }
 
@@ -361,6 +424,8 @@ export default class Game {
     } else {
       this.#board[row][column] = "YYY";
     }
+    //Update gameState
+    this.updateGameState(column, column);
     return "done";
   }
 
@@ -471,10 +536,8 @@ export default class Game {
     }
 
     console.log(" ");
-    for (let y = 0; y < 10; y++) {
-      console.log(this.#timeOnBoard[y]);
-    }
-    console.log();
+    console.log(this.#gameState);
+    console.log(" ");
 
     this.#graphics.clearCanvasGrey();
     this.#graphics.drawGridLines();
