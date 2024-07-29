@@ -44,7 +44,7 @@ export default class Game {
   /**
    * @returns string[]
    */
-  get gameState(){
+  get gameState() {
     return this.#gameState;
   }
 
@@ -93,7 +93,7 @@ export default class Game {
     let newGameState = [];
     let wasCertainMove = firstPlacement == secondPlacement;
     let gameStateEmpty = this.#gameState.length == 0;
-    if (gameStateEmpty){
+    if (gameStateEmpty) {
       if (wasCertainMove) {
         let vectorOne = firstPlacement.toString();
         newGameState.push(vectorOne);
@@ -102,7 +102,7 @@ export default class Game {
         let vectorOne = firstPlacement.toString();
         let vectorTwo = secondPlacement.toString();
         newGameState.push(vectorOne);
-        newGameState.push(vectorTwo); 
+        newGameState.push(vectorTwo);
         this.#gameState = newGameState;
       }
       return;
@@ -122,6 +122,98 @@ export default class Game {
       }
     }
     this.#gameState = newGameState;
+    if (this.shouldEntangle()){
+      let foundEntanglement = this.findEntanglement();
+      let entanglementType = this.entangleType(foundEntanglement[0], foundEntanglement[1], foundEntanglement[2]);
+      this.entangle(entanglementType);
+    }
+  }
+
+  /**
+   * This function finds two entangled pieces on the board. Should only be called if entanglement has been found. 
+   * @returns an the column entanglement is occuring in, the height of the bottom and top height of the entangled pieces in that order
+   */
+  findEntanglement(){
+    for (let y = 9; y > 0; y--){
+      for (let x = 0; x < 7; x++){
+        let entanglementHappened =
+         this.#board[y][x] == "PXX" && this.#board[y - 1][x] == "XXY" ||
+         this.#board[y][x] == "XXP" && this.#board[y - 1][x] == "YXX" ||
+         this.#board[y][x] == "YXX" && this.#board[y - 1][x] == "XXP" ||
+         this.#board[y][x] == "XXY" && this.#board[y - 1][x] == "PXX";
+         if (entanglementHappened){
+          console.log("it happened");
+          let ret = [];
+          ret.push(x);
+          ret.push(y);
+          ret.push(y - 1);
+          console.log(ret);
+          return ret;
+         }
+      }
+    }
+  }
+
+  /**
+   * This function checks to see if entanglement should occur.
+   * @returns true if entanglement should occur, false otherwise
+   */
+  shouldEntangle() {
+      for (let y = 9; y > 0; y--){
+        for (let x = 0; x < 7; x++){
+          let shouldEntangle =
+           this.#board[y][x] == "PXX" && this.#board[y - 1][x] == "XXY" ||
+           this.#board[y][x] == "XXP" && this.#board[y - 1][x] == "YXX" ||
+           this.#board[y][x] == "YXX" && this.#board[y - 1][x] == "XXP" ||
+           this.#board[y][x] == "XXY" && this.#board[y - 1][x] == "PXX";
+           if (shouldEntangle){
+            return true;
+           }
+        }
+      }
+    return false;
+  }
+
+  /**
+   * This function returns A if it is an all or nothing case of entanglement, and B if it is not the all of nothing case. This function
+   * should only be called when an instance of entanglement has been found.
+   * @param {int} column -> column entanglement occurs in
+   * @param {int} upperHeight -> height of the bottom entangled piece
+   * @param {int} lowerHeight -> height of the top entangled pice
+   * @returns "A" if it is the all or nothing case, B otherwise
+   */
+  entangleType(column, upperHeight, lowerHeight) {
+    let bottomPiece = this.#board[lowerHeight][column];
+    let topPiece = this.#board[upperHeight][column];
+    let allOrNothingCase =
+      (bottomPiece == "PXX" || bottomPiece == "YXX") &&
+      (topPiece == "XXP" || topPiece == "XXY");
+    //Horiztonal then Vertical
+    if (allOrNothingCase) {
+      return "A";
+    } else {
+      return "B";
+    }
+  }
+
+  /**
+   * This function modifies the current gameState by performing the operators that form our entanglements.  If it is passed "A" it keeps the all or nothing cases
+   * of entanglement. If passed "B" it keeps the other cases.
+   * @param {string} entanglementType -> the case of entanglement, should only be "A" or "B"
+   */
+  entangle(entanglementType) {
+    switch (entanglementType) {
+      case "A":
+        this.#gameState = this.#gameState.filter(
+          (state) => state.charAt(0) == state.charAt(1)
+        ); // This removes all cases that are not all or nothing cases
+        break;
+      case "B":
+        this.#gameState = this.#gameState.filter( 
+          (state) => state.charAt(0) != state.charAt(1) 
+        ); // This removes all cases that are not all or nothing cases
+        break;
+    }
   }
 
   /**
