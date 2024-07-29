@@ -350,8 +350,16 @@ class Game {
     }
   }
 
+  // TODO  TEST PLACE FUNCTION
+  // TODO implement Vertical Place function
+  // TODO debug state button click
+  // TODO implement game loop
+  // TODO implement game state
+  // TODO debug all place funcitons
+  // TODO debug reactToPlaceButton
+
   /**
-   * Places a piece on the board
+   * Checks to see if the placement is valid. If it is it places a piece on the board.
    * @returns "done" if the turn is over, if not it returns "notDone"
    */
   place() {
@@ -359,24 +367,60 @@ class Game {
     let row = this.firstOpenRow(column);
     let state = this.#turnInProgress.state;
     let validClassicMove = state == "certain" && row >= 4;
-    let validQuantumMove = state != "certain" && row >= 2;
+    let validQuantumMove =
+      state != "certain" && row >= 2 && placement1 != column;
     let isValid = validClassicMove || validQuantumMove;
     if (isValid) {
       if (state == "certain") {
-        this.placeCertainPiece();
-        return "done";
+        return this.placeCertainPiece();
       } else if (state == "horizontal") {
+        return this.placeHorizontalPiece();
+      } else {
+        return this.placeVerticalPiece();
       }
     }
   }
 
+  /**
+   * Places a vertical piece on the board.
+   * @returns "done" if the turn is over, "notDone" otherwise
+   */
+  placeVerticalPiece() {
+
+    return "done";
+  }
+
+  /**
+   * Places a horizontal piece on the board.
+   * If a horizontal piece has not been placed on this turn, it sets the value of firstPlacement, canModifyState and resets the column value of the turnInProgress
+   * @returns "done" if the turn is over, "notDone" otherwise
+   */
   placeHorizontalPiece() {
     let column = this.#turnInProgress.column;
-    let row = this.firstOpenRow(column);
+    let placement1 = this.#turnInProgress.firstPlacement;
+
+    if (placement1 == -1) {
+      this.#turnInProgress.firstPlacement = column;
+      this.#turnInProgress.canModifyState = false;
+      this.#turnInProgress.column = 3; // reset the column to the middle of the board
+      return "notDone";
+    }
+
+    let row1 = this.firstOpenRow(placement1);
+    let row2 = this.firstOpenRow(column);
+    if (this.#turnInProgress.color == "purple") {
+      this.#board[row1][placement1] = "PXX";
+      this.#board[row2][column] = "PXX";
+    } else {
+      this.#board[row1][placement1] = "YXX";
+      this.#board[row2][column] = "YXX";
+    }
+    return "done";
   }
 
   /**
    * Places a certain piece on the board
+   * @returns "done"
    */
   placeCertainPiece() {
     let column = this.#turnInProgress.column;
@@ -387,6 +431,7 @@ class Game {
     } else {
       this.#board[row][column] = "YYY";
     }
+    return "done";
   }
 
   /**
@@ -476,16 +521,37 @@ class Game {
     }
   }
 
+
   /**
    * Handles a place button click
    */
   reactToPlaceButton() {
     if (this.place() == "done") {
       this.changeTurn();
+      this.#graphics.clearCanvasGrey();
+      this.#graphics.drawGridLines();
+      this.#graphics.drawPieces(this.#board);
+      //TODO turn in progress is not going to be drawn correctly if it is written like this
+      this.#graphics.drawTurnInProgress(
+        this.#turnInProgress.column,
+        this.turnInProgressDepth(this.#turnInProgress.column),
+        this.#turnInProgress.placement1,
+        this.#turnInProgress.color,
+        this.#turnInProgress.state
+      );
+      return;
     }
     this.#graphics.clearCanvasGrey();
     this.#graphics.drawGridLines();
     this.#graphics.drawPieces(this.#board);
+    //TODO turn in progress is not going to be drawn correctly if it is written like this
+    this.#graphics.drawTurnInProgress(
+      this.#turnInProgress.column,
+      this.turnInProgressDepth(this.#turnInProgress.placement1),
+      this.#turnInProgress.placement1,
+      this.#turnInProgress.color,
+      this.#turnInProgress.state
+    );
     this.#graphics.drawTurnInProgress(
       this.#turnInProgress.column,
       this.turnInProgressDepth(this.#turnInProgress.column),
