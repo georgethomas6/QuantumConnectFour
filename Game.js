@@ -8,13 +8,14 @@
 
 import TurnInProgress from "./TurnInProgress.js";
 import Graphics from "./Graphics.js";
+import Queue from "./Queue.js";
 
 export default class Game {
   #board; // A 10 x 7 array of strings, each representing a cell in the board
   #turnInProgress; // the move that is in the process of being made
   #gameState;
-  #typeOfMoves; // this is a string of the type of moves that have been played, consists of V, C, H
-  #timeOnBoard; // A representation of how long pieces have been on the board;
+  #measuringQueue; //A queue containing pieces to measure
+  #moveStates; // this is a string of the type of moves that have been played, consists of V, C, H
   #graphics;
   constructor() {
     //initalize blank board
@@ -23,15 +24,11 @@ export default class Game {
       let row = ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"];
       this.#board.push(row);
     }
-    this.#timeOnBoard = [];
-    for (let y = 0; y < 10; y++) {
-      let row = [0, 0, 0, 0, 0, 0, 0];
-      this.#timeOnBoard.push(row);
-    }
+    this.#measuringQueue = new Queue();
     this.#turnInProgress = new TurnInProgress("purple");
     this.#graphics = new Graphics();
     this.#gameState = []; // this will be an array of strings
-    this.#typeOfMoves = "";
+    this.#moveStates = "";
   }
 
   //GETTERS
@@ -61,7 +58,7 @@ export default class Game {
    * @returns string
    */
   get typeOfMoves() {
-    return this.#typeOfMoves;
+    return this.#moveStates;
   }
 
   /**
@@ -80,19 +77,11 @@ export default class Game {
   }
 
   /**
-   * Sets the timeOnBoard to the param.
-   * @param {int[][]} timeOnBoard
-   */
-  set timeOnBoard(timeOnBoard) {
-    this.#timeOnBoard = timeOnBoard;
-  }
-
-  /**
    * Sets the typeOfMoves to the param.
    * @param {string} typeofMoves
    */
   set typeOfMoves(typeofMoves) {
-    this.#typeOfMoves = typeofMoves;
+    this.#moveStates = typeofMoves;
   }
 
   // GAME FUNCTIONS
@@ -120,48 +109,13 @@ export default class Game {
   }
 
   /**
-   * This function updates the timeOnBoard field. If an entry is 0, the function does nothing, if the entry is non-zero, it increments that entry.
-   */
-  updateTimeOnBoard() {
-    for (let y = 0; y < 10; y++) {
-      for (let x = 0; x < 7; x++) {
-        let needToUpdateEntry = this.#board[y][x] != "XXX";
-        // If the piece is certain we will just set its time on board to four, as measure will only measure pieces who have spent exactly 3 turns on the board
-        if (this.#board[y][x] == "PPP" || this.#board[y][x] == "YYY") {
-          this.#timeOnBoard[y][x] = 4;
-        } else if (needToUpdateEntry) {
-          this.#timeOnBoard[y][x]++;
-        }
-      }
-    }
-  }
-
-  /**
-   * This function returns two x of pieces to measure i.e. [firstX, secondX]
-   * @returns an array of pieces to measure, if there is no piece to measure if returns an empty array
-   */
-  findPiecesToMeasure() {
-    let ret = [];
-    for (let y = 9; y > -1; y--) {
-      for (let x = 0; x < 7; x++) {
-        let pieceShouldBeMeasured = this.#timeOnBoard[y][x] == 3;
-        if (pieceShouldBeMeasured) {
-          ret.push(x);
-        }
-      }
-    }
-
-    return ret;
-  }
-
-  /**
    * Finds the first index in all gameStates in the gameState array where a superposition occured. Should
    * only be called if there is a superposition
    * @returns int index at which the first superposition occured.
    */
   findSuperpositionIndex() {
-    for (let i = 0; i < this.#typeOfMoves.length; i++) {
-      if (this.#typeOfMoves.charAt(i) != "C") {
+    for (let i = 0; i < this.#moveStates.length; i++) {
+      if (this.#moveStates.charAt(i) != "C") {
         return i;
       }
     }
@@ -172,59 +126,14 @@ export default class Game {
    * the gameState after it measures. If there is entanglement it just selects one of the gameStates.
    */
   measure() {
-    let piecesToMeasure = this.findPiecesToMeasure();
-    if (piecesToMeasure.length == 0) {
-      return;
-    }
+    this.#gameState = this.#gameState.filter(
+      (game) =>
+        game.charAt(entanglementIndex) == chosenCharacterAtEntanglementIndex
+    );
 
-    // TODO RETHIND SHOULD ENTANGLE
-    // CANT JUST PICK ONE CUZ THERE COULD BE AN UNINVOLVED SUPERPOSITION
-    if (this.shouldEntangle()) {
-      let choice = Math.floor(Math.random() * this.#gameState.length);
-      let entanglementIndex = 0;
-      for (let i = 0; i < this.#typeOfMoves.length; i++) {
-        if (this.#typeOfMoves.charAt(i) == "C") {
-          entanglementIndex++;
-        } else {
-          break;
-        }
-      }
-
-      let chosenCharacterAtEntanglementIndex =
-        this.#gameState[choice].charAt(entanglementIndex);
-
-      this.#gameState = this.#gameState.filter(
-        (game) =>
-          game.charAt(entanglementIndex) == chosenCharacterAtEntanglementIndex
-      );
-
-      let newTypeOfMoves = "";
-      for (let i = 0; i < this.#typeOfMoves.length; i++) {
-        if (i <= entanglementIndex + 1) {
-          newTypeOfMoves = newTypeOfMoves.concat("C");
-        } else {
-          newTypeOfMoves = newTypeOfMoves.concat(this.#typeOfMoves[i]);
-        }
-      }
-      this.#typeOfMoves = newTypeOfMoves;
-      this.gameStateToBoard();
-
-      return;
-    }
-
-    let superpositionIndex = this.findSuperpositionIndex();
-    let chosen = Math.floor(Math.random() * piecesToMeasure.length);
-    let choice = piecesToMeasure[chosen];
     this.#gameState = this.#gameState.filter(
       (game) => game.charAt(superpositionIndex) == choice
     );
-    let splitTypeOfMoves = this.#typeOfMoves.split("");
-    // Replace the uncertain type with "C" at the index where there is no longer a superposition
-    splitTypeOfMoves[superpositionIndex] = "C";
-
-    let newTypeOfMoves = splitTypeOfMoves.join("");
-    this.#typeOfMoves = newTypeOfMoves;
-    this.gameStateToBoard();
   }
 
   /**
@@ -248,55 +157,68 @@ export default class Game {
   }
 
   /**
+   * Returns an array of the rows at which the pieces will fall
+   * @param {string[][]} board -> board to use
+   * @param {int[]} columnsPlayedIn -> array of columns played in
+   */
+  findDepths(board, columnsPlayedIn) {
+    let rows = [];
+    for (let i = 0; i < columnsPlayedIn.length; i++) {
+      let column = columnsPlayedIn[i];
+      let row = this.firstOpenRow(board, column);
+      rows.push(row);
+    }
+    return rows;
+  }
+
+  /**
    * This function updates the board to reflect the gameState after a measurement has occured.
    */
   gameStateToBoard() {
+    let moveStates = this.#moveStates;
     let newBoard = this.initBlankBoard();
-    let newTimeOnBoard = this.initNewTimeOnBoard();
-    let movesPlayed = this.#gameState[0].length;
-    let index = 0;
-
-    for (let i = 0; i < movesPlayed; i++) {
-      let typeOfMove = this.typeOfMoves.charAt(index);
-
-      if (typeOfMove == "C") {
-        let column = this.#gameState[0].charAt(index); // If it is classic then every gameState will have the same char at the ith index
-        let row = this.firstOpenRow(newBoard, column);
-        if (index % 2 == 0) {
-          newBoard[row][column] = "PPP";
-        } else {
+    for (let i = 0; i < moveStates.length; i++) {
+      switch (
+        moveStates.charAt(i) //We want to switch based on the character at the ith position
+      ) {
+        case "C": // the piece is certain
+          let column = this.#gameState[0].charAt(i); // every gameState will have the same character at the ith position since its certain
+          let row = this.firstOpenRow(newBoard, column);
+          if (i % 2 == 0) {
+            newBoard[row][column] = "PPP";
+            continue; //kill this iteration
+          }
           newBoard[row][column] = "YYY";
-        }
-        newTimeOnBoard[row][column] = 4;
-      } else if (typeOfMove == "H") {
-        let columns = this.getIthCharacter(this.#gameState, index); // Get the possible columns
-        for (let i = 0; i < columns.length; i++) {
-          let row = this.firstOpenRow(newBoard, columns[i]);
-          if (index % 2 == 0) {
-            newBoard[row][columns[i]] = "PXX";
-          } else {
-            newBoard[row][columns[i]] = "YXX";
+          break;
+        case "H":
+          let columnsPlayedIn = this.getIthCharacter(this.#gameState, i); // the columns played in are all of the ith characters in the gamestates
+          let rows1 = this.findDepths(newBoard, columnsPlayedIn);
+          for (let col = 0; col < columnsPlayedIn.length; col++) {
+            let row = rows1[col];
+            let column = columnsPlayedIn[col];
+            if (i % 2 == 0) {
+              newBoard[row][column] = "PXX";
+              continue; //kill this iteration
+            }
+            newBoard[row][column] = "YXX";
           }
-          newTimeOnBoard[row][columns[i]] = this.#timeOnBoard[row][columns[i]];
-        }
-      } else if (typeOfMove == "V") {
-        let columns = this.getIthCharacter(this.#gameState, index);
-
-        for (let i = 0; i < columns.length; i++) {
-          let row = this.firstOpenRow(newBoard, columns[i]);
-          if (index % 2 == 0) {
-            newBoard[row][columns[i]] = "XXP";
-          } else {
-            newBoard[row][columns[i]] = "XXY";
+          break;
+        case "V":
+          let colsPlayedIn2 = this.getIthCharacter(this.#gameState, i); // the columns played in are all of the ith characters in the gamestates
+          let rows2 = this.findDepths(newBoard, colsPlayedIn2);
+          for (let col = 0; col < colsPlayedIn2.length; col++) {
+            let row = rows2[col];
+            let column = colsPlayedIn2[col];
+            if (i % 2 == 0) {
+              newBoard[row][column] = "PXX";
+              continue; //kill this iteration
+            }
+            newBoard[row][column] = "YXX";
           }
-          newTimeOnBoard[row][columns[i]] = this.#timeOnBoard[row][columns[i]];
-        }
+          break;
       }
-      index++;
     }
-
-    this.#timeOnBoard = newTimeOnBoard;
-    this.#board = newBoard;
+    this.#board = newBoard; // Update Board to reflect gameState
   }
 
   /**
@@ -378,29 +300,7 @@ export default class Game {
    * @returns true if entanglement should occur, false otherwise
    */
   shouldEntangle() {
-    let piecesToMeasureXCoords = this.findPiecesToMeasure();
-    if (piecesToMeasureXCoords.length == 0) {
-      return;
-    }
-    let columnOne = piecesToMeasureXCoords[0];
-    let columnTwo = piecesToMeasureXCoords[1];
-    let piecesToMeasureYCoords = [];
-    for (let y = 9; y > 0; y--) {
-      if (this.#timeOnBoard[y][piecesToMeasureXCoords[0]] == 3) {
-        piecesToMeasureYCoords.push(y);
-      }
-      if (this.#timeOnBoard[y][piecesToMeasureXCoords[1]] == 3) {
-        piecesToMeasureYCoords.push(y);
-      }
-    }
-
-    let rowOne = piecesToMeasureYCoords[0];
-    let rowTwo = piecesToMeasureYCoords[1];
-
-    let firstShouldEntangle = this.checkForEntanglement(columnOne, rowOne);
-
-    let secondShouldEntangle = this.checkForEntanglement(columnTwo, rowTwo);
-    return firstShouldEntangle || secondShouldEntangle;
+    //TODO
   }
 
   /**
@@ -656,7 +556,11 @@ export default class Game {
     let firstPlacement = this.#turnInProgress.firstPlacement;
     let validClassicMove = state == "certain" && row >= 4;
     let validQuantumMove =
-      state != "certain" && row >= 2 && firstPlacement != column;
+      state != "certain" &&
+      row >= 2 &&
+      firstPlacement != column &&
+      this.#board[4][column] != "PPP" &&
+      this.#board[4][column] != "YYY";
     let isValid = validClassicMove || validQuantumMove;
     if (isValid) {
       if (state == "certain") {
@@ -700,9 +604,9 @@ export default class Game {
     ] = "XXX";
 
     //Update gameState
+    this.#moveStates = this.#moveStates.concat("V");
     this.updateGameState(firstPlacement, column);
-    this.#typeOfMoves = this.#typeOfMoves.concat("V");
-    this.gameStateToBoard();
+
     return "done";
   }
 
@@ -736,9 +640,9 @@ export default class Game {
     ] = "XXX";
 
     //Update gameState
+
+    this.#moveStates = this.#moveStates.concat("H");
     this.updateGameState(firstPlacement, column);
-    this.#typeOfMoves = this.#typeOfMoves.concat("H");
-    this.gameStateToBoard();
     return "done";
   }
 
@@ -748,13 +652,9 @@ export default class Game {
    */
   placeCertainPiece() {
     let column = this.#turnInProgress.column;
-    let row = this.firstOpenRow(this.#board, column);
-    let color = this.#turnInProgress.color;
 
-    //Update gameState
     this.updateGameState(column, column);
-    this.#typeOfMoves = this.#typeOfMoves.concat("C");
-    this.gameStateToBoard();
+    this.#moveStates = this.#moveStates.concat("C");
     return "done";
   }
 
@@ -861,18 +761,10 @@ export default class Game {
   reactToPlaceButton() {
     if (this.place() == "done") {
       // Update time on board first because the place functions will set the time on board value for the new piece to 1 and we don't want to accidentally update it to 2
-      this.updateTimeOnBoard();
-      this.measure();
 
-      console.log("BOARD")
-      for (let i = 0; i < 10; i++) {
-        console.log(this.#board[i]);
-      }
-      console.log("TIME ON BOARD");
-      for (let i = 0; i < 10; i++) {
-        console.log(this.#timeOnBoard[i]);
-      }
-
+      this.gameStateToBoard();
+      console.log("Game state " + this.#gameState);
+      console.log("TYPE OF MOVES " + this.#moveStates);
       this.changeTurn();
     }
 
@@ -898,11 +790,7 @@ export default class Game {
     }
     this.#turnInProgress = new TurnInProgress("purple");
     this.#gameState = [];
-    this.#timeOnBoard = [];
-    this.#typeOfMoves = "";
-    for (let i = 0; i < 10; i++) {
-      this.#timeOnBoard.push([0, 0, 0, 0, 0, 0, 0]);
-    }
+    this.#moveStates = "";
     this.start();
   }
 }
