@@ -115,7 +115,7 @@ export default class Game {
   }
 
   /**
-   * This function returns two x of pieces to measure i.e. [firstX, firstY]
+   * This function returns two x of pieces to measure i.e. [firstX, secondX]
    * @returns an array of pieces to measure, if there is no piece to measure if returns an empty array
    */
   findPiecesToMeasure() {
@@ -155,6 +155,8 @@ export default class Game {
       return;
     }
 
+    // TODO RETHIND SHOULD ENTANGLE
+    // CANT JUST PICK ONE CUZ THERE COULD BE AN UNINVOLVED SUPERPOSITION
     if (this.shouldEntangle()) {
       let choice = Math.floor(Math.random() * this.#gameState.length);
       console.log("THIS IS NUMBER OF OPTIONS " + this.#gameState.length);
@@ -162,7 +164,18 @@ export default class Game {
       let newGameState = [];
       newGameState.push(this.#gameState[choice]);
       this.#gameState = newGameState;
+      console.log("THIS IS NEW GAMESTATE " + this.#gameState);
+
+      let newTypeOfMoves = "";
+      for (let i = 0; i < this.#typeOfMoves.length; i++) {
+        newTypeOfMoves = newTypeOfMoves.concat("C");
+      }
+      this.#typeOfMoves = newTypeOfMoves;
       this.gameStateToBoard();
+      for (let i = 0; i < 10; i++) {
+        console.log(this.#board[i]);
+      }
+      console.log(this.#typeOfMoves);
       return;
     }
 
@@ -332,23 +345,49 @@ export default class Game {
   }
 
   /**
-   * This function checks to see if entanglement should occur.
+   * This function checks to see if entanglement should occur at the places where measurement is equal to 3;
    * @returns true if entanglement should occur, false otherwise
    */
   shouldEntangle() {
+    //TODO THINK ABOUT INDEX OUT OF BOUNDS BUG POTENTIAL
+    let piecesToMeasureXCoords = this.findPiecesToMeasure();
+    if (piecesToMeasureXCoords.length == 0) {
+      return;
+    }
+    let columnOne = piecesToMeasureXCoords[0];
+    let columnTwo = piecesToMeasureXCoords[1];
+    let piecesToMeasureYCoords = [];
     for (let y = 9; y > 0; y--) {
-      for (let x = 0; x < 7; x++) {
-        let shouldEntangle =
-          (this.#board[y][x] == "PXX" && this.#board[y - 1][x] == "XXY") ||
-          (this.#board[y][x] == "XXP" && this.#board[y - 1][x] == "YXX") ||
-          (this.#board[y][x] == "YXX" && this.#board[y - 1][x] == "XXP") ||
-          (this.#board[y][x] == "XXY" && this.#board[y - 1][x] == "PXX");
-        if (shouldEntangle) {
-          return true;
-        }
+      if (this.#timeOnBoard[y][piecesToMeasureXCoords[0]] == 3) {
+        piecesToMeasureYCoords.push(y);
+      }
+      if (this.#timeOnBoard[y][piecesToMeasureXCoords[1]]) {
+        piecesToMeasureYCoords.push(y);
       }
     }
-    return false;
+
+    let rowOne = piecesToMeasureYCoords[0];
+    let rowTwo = piecesToMeasureYCoords[1];
+
+    let firstShouldEntangle =
+      (this.#board[rowOne][columnOne] == "PXX" &&
+        this.#board[rowOne - 1][columnOne] == "XXY") ||
+      (this.#board[rowOne][columnOne] == "XXP" &&
+        this.#board[rowOne - 1][columnOne] == "YXX") ||
+      (this.#board[rowOne][columnOne] == "YXX" &&
+        this.#board[rowOne - 1][columnOne] == "XXP") ||
+      (this.#board[rowOne][columnOne] == "XXY" &&
+        this.#board[rowOne - 1][columnOne] == "PXX");
+    let secondShouldEntangle =
+      (this.#board[rowTwo][columnTwo] == "PXX" &&
+        this.#board[rowTwo - 1][columnTwo] == "XXY") ||
+      (this.#board[rowOne][columnOne] == "XXP" &&
+        this.#board[rowTwo - 1][columnTwo] == "YXX") ||
+      (this.#board[rowOne][columnOne] == "YXX" &&
+        this.#board[rowTwo - 1][columnTwo] == "XXP") ||
+      (this.#board[rowOne][columnOne] == "XXY" &&
+        this.#board[rowTwo - 1][columnTwo] == "PXX");
+    return firstShouldEntangle || secondShouldEntangle;
   }
 
   /**
