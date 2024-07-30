@@ -98,6 +98,28 @@ export default class Game {
   // GAME FUNCTIONS
 
   /**
+   * Returns a 7 x 10 array of all zeros
+   */
+  initNewTimeOnBoard() {
+    let newTimeOnBoard = [];
+    for (let i = 0; i < 10; i++) {
+      newTimeOnBoard.push([0, 0, 0, 0, 0, 0, 0]);
+    }
+    return newTimeOnBoard;
+  }
+
+  /**
+   * Returns a 7 x 10 array of all "XXX"
+   */
+  initBlankBoard() {
+    let newBoard = [];
+    for (let i = 0; i < 10; i++) {
+      newBoard.push(["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"]);
+    }
+    return newBoard;
+  }
+
+  /**
    * This function updates the timeOnBoard field. If an entry is 0, the function does nothing, if the entry is non-zero, it increments that entry.
    */
   updateTimeOnBoard() {
@@ -160,29 +182,30 @@ export default class Game {
     if (this.shouldEntangle()) {
       let choice = Math.floor(Math.random() * this.#gameState.length);
       let entanglementIndex = 0;
-      for (let i = 0; i < this.#typeOfMoves.length; i++){
+      for (let i = 0; i < this.#typeOfMoves.length; i++) {
         if (this.#typeOfMoves.charAt(i) == "C") {
           entanglementIndex++;
         } else {
           break;
         }
-      } 
+      }
 
-      let chosenCharacterAtEntanglementIndex = this.#gameState[choice].charAt(entanglementIndex);
+      let chosenCharacterAtEntanglementIndex =
+        this.#gameState[choice].charAt(entanglementIndex);
 
-      this.#gameState = this.#gameState.filter( game => game.charAt(entanglementIndex) == chosenCharacterAtEntanglementIndex);
-    
-      
+      this.#gameState = this.#gameState.filter(
+        (game) =>
+          game.charAt(entanglementIndex) == chosenCharacterAtEntanglementIndex
+      );
 
       let newTypeOfMoves = "";
       for (let i = 0; i < this.#typeOfMoves.length; i++) {
-        if (i <= entanglementIndex + 1){
-        newTypeOfMoves = newTypeOfMoves.concat("C");
-      } else {
-        newTypeOfMoves = newTypeOfMoves.concat(this.#typeOfMoves[i]);
+        if (i <= entanglementIndex + 1) {
+          newTypeOfMoves = newTypeOfMoves.concat("C");
+        } else {
+          newTypeOfMoves = newTypeOfMoves.concat(this.#typeOfMoves[i]);
+        }
       }
-
-    }
       this.#typeOfMoves = newTypeOfMoves;
       this.gameStateToBoard();
 
@@ -228,19 +251,16 @@ export default class Game {
    * This function updates the board to reflect the gameState after a measurement has occured.
    */
   gameStateToBoard() {
-    let newBoard = [];
-    let newTimeOnBoard = [];
-    for (let i = 0; i < 10; i++) {
-      newBoard.push(["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"]);
-      newTimeOnBoard.push([0, 0, 0, 0, 0, 0, 0]);
-    }
-
+    let newBoard = this.initBlankBoard();
+    let newTimeOnBoard = this.initNewTimeOnBoard();
     let movesPlayed = this.#gameState[0].length;
     let index = 0;
 
     for (let i = 0; i < movesPlayed; i++) {
-      if (this.#typeOfMoves.charAt(index) == "C") {
-        let column = this.#gameState[0].charAt(index);
+      let typeOfMove = this.typeOfMoves.charAt(index);
+
+      if (typeOfMove == "C") {
+        let column = this.#gameState[0].charAt(index); // If it is classic then every gameState will have the same char at the ith index
         let row = this.firstOpenRow(newBoard, column);
         if (index % 2 == 0) {
           newBoard[row][column] = "PPP";
@@ -248,27 +268,26 @@ export default class Game {
           newBoard[row][column] = "YYY";
         }
         newTimeOnBoard[row][column] = 4;
-      } else if (this.#typeOfMoves.charAt(index) == "H") {
-        // Get the possible columns
-        let columns = this.getIthCharacter(this.#gameState, index);
-        for (let i = 0; i < columns.length; i++) {
-          let row = this.firstOpenRow(newBoard, columns[i]);
-          if (index % 2 == 0) {
-            newBoard[row][columns[i]] = "XXP";
-          } else {
-            newBoard[row][columns[i]] = "XXY";
-          }
-          newTimeOnBoard[row][columns[i]] = this.#timeOnBoard[row][columns[i]];
-        }
-      } else if (this.#typeOfMoves.charAt(index) == "V") {
-        let columns = this.getIthCharacter(this.#gameState, index);
-
+      } else if (typeOfMove == "H") {
+        let columns = this.getIthCharacter(this.#gameState, index); // Get the possible columns
         for (let i = 0; i < columns.length; i++) {
           let row = this.firstOpenRow(newBoard, columns[i]);
           if (index % 2 == 0) {
             newBoard[row][columns[i]] = "PXX";
           } else {
             newBoard[row][columns[i]] = "YXX";
+          }
+          newTimeOnBoard[row][columns[i]] = this.#timeOnBoard[row][columns[i]];
+        }
+      } else if (typeOfMove == "V") {
+        let columns = this.getIthCharacter(this.#gameState, index);
+
+        for (let i = 0; i < columns.length; i++) {
+          let row = this.firstOpenRow(newBoard, columns[i]);
+          if (index % 2 == 0) {
+            newBoard[row][columns[i]] = "XXP";
+          } else {
+            newBoard[row][columns[i]] = "XXY";
           }
           newTimeOnBoard[row][columns[i]] = this.#timeOnBoard[row][columns[i]];
         }
@@ -359,7 +378,6 @@ export default class Game {
    * @returns true if entanglement should occur, false otherwise
    */
   shouldEntangle() {
-    //TODO THINK ABOUT INDEX OUT OF BOUNDS BUG POTENTIAL
     let piecesToMeasureXCoords = this.findPiecesToMeasure();
     if (piecesToMeasureXCoords.length == 0) {
       return;
@@ -371,7 +389,7 @@ export default class Game {
       if (this.#timeOnBoard[y][piecesToMeasureXCoords[0]] == 3) {
         piecesToMeasureYCoords.push(y);
       }
-      if (this.#timeOnBoard[y][piecesToMeasureXCoords[1]]) {
+      if (this.#timeOnBoard[y][piecesToMeasureXCoords[1]] == 3) {
         piecesToMeasureYCoords.push(y);
       }
     }
@@ -379,25 +397,29 @@ export default class Game {
     let rowOne = piecesToMeasureYCoords[0];
     let rowTwo = piecesToMeasureYCoords[1];
 
-    let firstShouldEntangle =
-      (this.#board[rowOne][columnOne] == "PXX" &&
-        this.#board[rowOne - 1][columnOne] == "XXY") ||
-      (this.#board[rowOne][columnOne] == "XXP" &&
-        this.#board[rowOne - 1][columnOne] == "YXX") ||
-      (this.#board[rowOne][columnOne] == "YXX" &&
-        this.#board[rowOne - 1][columnOne] == "XXP") ||
-      (this.#board[rowOne][columnOne] == "XXY" &&
-        this.#board[rowOne - 1][columnOne] == "PXX");
-    let secondShouldEntangle =
-      (this.#board[rowTwo][columnTwo] == "PXX" &&
-        this.#board[rowTwo - 1][columnTwo] == "XXY") ||
-      (this.#board[rowOne][columnOne] == "XXP" &&
-        this.#board[rowTwo - 1][columnTwo] == "YXX") ||
-      (this.#board[rowOne][columnOne] == "YXX" &&
-        this.#board[rowTwo - 1][columnTwo] == "XXP") ||
-      (this.#board[rowOne][columnOne] == "XXY" &&
-        this.#board[rowTwo - 1][columnTwo] == "PXX");
+    let firstShouldEntangle = this.checkForEntanglement(columnOne, rowOne);
+
+    let secondShouldEntangle = this.checkForEntanglement(columnTwo, rowTwo);
     return firstShouldEntangle || secondShouldEntangle;
+  }
+
+  /**
+   * This function checks for entanglement in the given row and column
+   * @returns true if there is entanglement, false otherwise
+   */
+  checkForEntanglement(column, row) {
+    //TODO CHECK FOR INDEX OUT OF BOUNDS BUGS
+    let shouldEntangle =
+      (this.#board[row][column] == "PXX" &&
+        this.#board[row - 1][column] == "XXY") ||
+      (this.#board[row][column] == "XXP" &&
+        this.#board[row - 1][column] == "YXX") ||
+      (this.#board[row][column] == "YXX" &&
+        this.#board[row - 1][column] == "XXP") ||
+      (this.#board[row][column] == "XXY" &&
+        this.#board[row - 1][column] == "PXX");
+
+    return shouldEntangle;
   }
 
   /**
@@ -661,9 +683,9 @@ export default class Game {
     if (firstPlacement == -1) {
       // Temporarily put a piece above the board to show where it will fall
       if (this.#turnInProgress.color == "purple") {
-        this.#board[this.turnInProgressDepth(column)][column] = "PXX";
+        this.#board[this.turnInProgressDepth(column)][column] = "XXP";
       } else {
-        this.#board[this.turnInProgressDepth(column)][column] = "YXX";
+        this.#board[this.turnInProgressDepth(column)][column] = "XXY";
       }
       this.#turnInProgress.firstPlacement = column;
       this.#turnInProgress.canModifyState = false;
@@ -697,9 +719,9 @@ export default class Game {
     if (firstPlacement == -1) {
       // Temporarily put a piece above the board to show where it will fall
       if (this.#turnInProgress.color == "purple") {
-        this.#board[this.turnInProgressDepth(column)][column] = "XXP";
+        this.#board[this.turnInProgressDepth(column)][column] = "PXX";
       } else {
-        this.#board[this.turnInProgressDepth(column)][column] = "XXY";
+        this.#board[this.turnInProgressDepth(column)][column] = "YXX";
       }
 
       this.#turnInProgress.firstPlacement = column;
@@ -841,6 +863,15 @@ export default class Game {
       // Update time on board first because the place functions will set the time on board value for the new piece to 1 and we don't want to accidentally update it to 2
       this.updateTimeOnBoard();
       this.measure();
+
+      console.log("BOARD")
+      for (let i = 0; i < 10; i++) {
+        console.log(this.#board[i]);
+      }
+      console.log("TIME ON BOARD");
+      for (let i = 0; i < 10; i++) {
+        console.log(this.#timeOnBoard[i]);
+      }
 
       this.changeTurn();
     }

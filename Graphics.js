@@ -1,3 +1,4 @@
+
 export default class Graphics {
   #canvas;
   #ctx;
@@ -167,16 +168,16 @@ export default class Graphics {
         this.drawPiece(xCoordinate, yCoordinate, "yellow");
         break;
       case 3:
-        this.drawVerticalStatePiece(xCoordinate, yCoordinate, "purple");
-        break;
-      case 4:
-        this.drawVerticalStatePiece(xCoordinate, yCoordinate, "yellow");
-        break;
-      case 5:
         this.drawHorizontalStatePiece(xCoordinate, yCoordinate, "purple");
         break;
-      case 6:
+      case 4:
         this.drawHorizontalStatePiece(xCoordinate, yCoordinate, "yellow");
+        break;
+      case 5:
+        this.drawVerticalStatePiece(xCoordinate, yCoordinate, "purple");
+        break;
+      case 6:
+        this.drawVerticalStatePiece(xCoordinate, yCoordinate, "yellow");
         break;
       default:
         break;
