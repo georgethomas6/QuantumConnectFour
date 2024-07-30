@@ -159,23 +159,33 @@ export default class Game {
     // CANT JUST PICK ONE CUZ THERE COULD BE AN UNINVOLVED SUPERPOSITION
     if (this.shouldEntangle()) {
       let choice = Math.floor(Math.random() * this.#gameState.length);
-      console.log("THIS IS NUMBER OF OPTIONS " + this.#gameState.length);
-      console.log("THIS WAS CHOICE " + choice);
-      let newGameState = [];
-      newGameState.push(this.#gameState[choice]);
-      this.#gameState = newGameState;
-      console.log("THIS IS NEW GAMESTATE " + this.#gameState);
+      let entanglementIndex = 0;
+      for (let i = 0; i < this.#typeOfMoves.length; i++){
+        if (this.#typeOfMoves.charAt(i) == "C") {
+          entanglementIndex++;
+        } else {
+          break;
+        }
+      } 
+
+      let chosenCharacterAtEntanglementIndex = this.#gameState[choice].charAt(entanglementIndex);
+
+      this.#gameState = this.#gameState.filter( game => game.charAt(entanglementIndex) == chosenCharacterAtEntanglementIndex);
+    
+      
 
       let newTypeOfMoves = "";
       for (let i = 0; i < this.#typeOfMoves.length; i++) {
+        if (i <= entanglementIndex + 1){
         newTypeOfMoves = newTypeOfMoves.concat("C");
+      } else {
+        newTypeOfMoves = newTypeOfMoves.concat(this.#typeOfMoves[i]);
       }
+
+    }
       this.#typeOfMoves = newTypeOfMoves;
       this.gameStateToBoard();
-      for (let i = 0; i < 10; i++) {
-        console.log(this.#board[i]);
-      }
-      console.log(this.#typeOfMoves);
+
       return;
     }
 
