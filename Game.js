@@ -13,6 +13,7 @@ export default class Game {
   #board; // A 10 x 7 array of strings, each representing a cell in the board
   #turnInProgress; // the move that is in the process of being made
   #gameState;
+  #timeOnBoard; // A 10 X 7 board that keeps track of the amount of time a moved has been in a position
   #moveStates; // this is a string of the type of moves that have been played, consists of V, C, H
   #graphics;
   constructor() {
@@ -25,6 +26,7 @@ export default class Game {
     this.#turnInProgress = new TurnInProgress("purple");
     this.#graphics = new Graphics();
     this.#gameState = []; // this will be an array of strings
+    this.timeOnBoard = this.initNewTimeOnBoard();
     this.#moveStates = "";
   }
 
@@ -51,6 +53,9 @@ export default class Game {
     return this.#gameState;
   }
 
+  get timeOnBoard(){
+    return this.#timeOnBoard;
+  }
   /**
    * @returns string
    */
@@ -63,6 +68,10 @@ export default class Game {
    */
   set board(board) {
     this.#board = board;
+  }
+
+  set timeOnBoard(newTime){
+    this.#timeOnBoard = newTime;
   }
 
   /**
@@ -405,6 +414,22 @@ export default class Game {
     }
   }
 
+  /**
+   * This function increments the time spent on the board for all entries not equal to "XXX". Should be called after place occurs.
+   */
+  incrementTimeOnBoard(){
+    for (let y = 9; y >= 0; y--){
+      for (let x = 0; x < 7; x++){
+        let isCertain = this.#board[y][x] == "PPP" || this.#board[y][x] == "YYY";
+        if (isCertain){
+          this.#timeOnBoard[y][x] = 4;
+        } else if (this.#board[y][x] != "XXX") {
+          this.#timeOnBoard[y][x]++;
+        }
+      }
+    }
+  }
+
     /**
    * Returns an array containing the ith character of each string
    * @param {string[]} gameStates -> an array of gameStates
@@ -643,6 +668,13 @@ export default class Game {
       console.log(this.#board[i]);
     }
   }
+
+  printTimeOnBoard(){
+    for (let i = 0; i < this.#board.length; i++) {
+      console.log(this.#timeOnBoard[i]);
+    }
+  }
+  
   /**
    * Handles a place button click
    */
@@ -651,6 +683,8 @@ export default class Game {
       // Update time on board first because the place functions will set the time on board value for the new piece to 1 and we don't want to accidentally update it to 2
 
 
+      this.incrementTimeOnBoard();
+      this.printTimeOnBoard();
       this.measure();
       console.log("GAME STATE " + this.#gameState);
       console.log("MOVE STATES " + this.#moveStates);
@@ -682,6 +716,7 @@ export default class Game {
     this.#turnInProgress = new TurnInProgress("purple");
     this.#gameState = [];
     this.#moveStates = "";
+    this.#timeOnBoard = this.initNewTimeOnBoard();
     this.start();
   }
 }
