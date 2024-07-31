@@ -115,10 +115,56 @@ export default class Game {
   }
 
   /**
+   * Returns the position of entangled pieces in an array.
+   * @return [x1, y1, x2, y2, x3, y3, x4, y4]
+   */
+  entanglementIsHappeningHere(){
+    let returnValue = [];
+    let piecesToBeMeasured = this.findPiecesToMeasure(); // FIND PIECES TO BE MEASURED
+    let entanglementOccuring = this.doWeNeedToEntangle(); // FIND FIRST INSTANCE OF ENTANGLEMENT TO FIND TARGETS 
+    let firstPieceToLookForX = entanglementOccuring[0];
+    let firstPieceToLookForY = entanglementOccuring[1];
+    let secondPieceToLookForX = entanglementOccuring[0];
+    let secondPieceToLookForY = firstPieceToLookForY - 1;
+    let firstPieceToLookFor = this.#board[firstPieceToLookForY][firstPieceToLookForX]; // SAVE TARGET 1
+    let secondPieceToLookFor = this.#board[secondPieceToLookForY][secondPieceToLookForX]; // SAVE TARGET 2
+
+    // ENTANGLEMENT IS OCCURINIG HERE SO PUSH THESE PIECES TO RETURN VALUE
+    returnValue.push(firstPieceToLookForX);
+    returnValue.push(firstPieceToLookForY);
+    returnValue.push(secondPieceToLookForX);
+    returnValue.push(secondPieceToLookForY);
+
+    // NOW WE NEED TO FIND THE LOWEST PIECES THAT MATCH THEIR STRING ON THE BOARD NOT IN THE SAME COLUMN
+    for (let y = 9; y > 0; y--){
+      for (let x = 0; x < 7; x++){
+        if (x == firstPieceToLookForX){
+          continue; // WE DO NOT WANT TO SEARCH THE COLUMN WE ALREADY KNOW ENTANGLEMENT IS HAPPENING IN
+        } else if (this.#board[y][x] == firstPieceToLookFor || this.#board[y][x] == secondPieceToLookFor){
+          returnValue.push(x);
+          returnValue.push(y);
+        }
+      }
+    }
+
+    return returnValue;
+
+  }
+  /**
    * This function performs a measurement. It finds the pieces on the board that is about to be measured, and filters
    * the gameState after it measures. If there is entanglement it just selects one of the gameStates.
    */
-  measure() {}
+  measure() {
+    let piecesToBeMeasured = this.findPiecesToMeasure();
+    if (piecesToBeMeasured.length == 0){
+      return; // If there is nothing to measure return.
+    }
+
+    let isEntanglementOccuring = this.doWeNeedToEntangle();
+    if (isEntanglementOccuring.length != 0){
+      console.log("ENTANGLEMENT IS OCCURING IN THESE PIECES  " + this.entanglementIsHappeningHere());
+    }
+  }
 
   /**
    * Returns an array of the rows at which the pieces will fall
