@@ -118,14 +118,16 @@ export default class Game {
    * Returns the position of entangled pieces in an array.
    * @return [x1, y1, x2, y2, x3, y3, x4, y4]
    */
-  entanglementIsHappeningHere() {
+  entanglementIsHappeningHere(firstPlacement, secondPlacement) {
     let returnValue = [];
-    let piecesToBeMeasured = this.findPiecesToMeasure(); // FIND PIECES TO BE MEASURED
-    let entanglementOccuring = this.doWeNeedToEntangle(); // FIND FIRST INSTANCE OF ENTANGLEMENT TO FIND TARGETS
+    let entanglementOccuring = this.doWeNeedToEntangle(
+      firstPlacement,
+      secondPlacement
+    ); // FIND FIRST INSTANCE OF ENTANGLEMENT TO FIND TARGETS
     let firstPieceToLookForX = entanglementOccuring[0];
     let firstPieceToLookForY = entanglementOccuring[1];
     let secondPieceToLookForX = entanglementOccuring[0];
-    let secondPieceToLookForY = firstPieceToLookForY - 1;
+    let secondPieceToLookForY = entanglementOccuring[1] + 1;
     let firstPieceToLookFor =
       this.#board[firstPieceToLookForY][firstPieceToLookForX]; // SAVE TARGET 1
     let secondPieceToLookFor =
@@ -170,11 +172,11 @@ export default class Game {
         if (positionIsInvolvedInEntanglement) {
           continue; // WE DONT WANT THE TIME OF ANYONE WHO IS ENTANGLED
         }
-        let positionIsInSuperPosition = 
-        this.#board[y][x] != "XXX" &&
-        this.#board[y][x] != "PPP" &&
-        this.#board[y][x] != "YYY";
-        if (positionIsInSuperPosition){
+        let positionIsInSuperPosition =
+          this.#board[y][x] != "XXX" &&
+          this.#board[y][x] != "PPP" &&
+          this.#board[y][x] != "YYY";
+        if (positionIsInSuperPosition) {
           return this.#timeOnBoard[y][x];
         }
       }
@@ -188,13 +190,16 @@ export default class Game {
    * @param {int} column -> entanglement is occuring in
    * @param {int} -> row first height in the entanglement
    */
-  findEntanglementType(column, row){
-    if (row == 0){
-      return;  // AVOID INDEX OUT OF BOUNDS
+  findEntanglementType(column, row) {
+    if (row == 9) {
+      return; // AVOID INDEX OUT OF BOUNDS
     }
-    let bottomPiece = this.#board[row][column];
-    let topPiece = this.#board[row - 1][column];
-    if ((bottomPiece == "PXX" || bottomPiece == "YXX") && topPiece == "XXY" || topPiece == "XXP"){
+    let topPiece = this.#board[row][column];
+    let bottomPiece = this.#board[row + 1][column];
+    if (
+      (bottomPiece == "PXX" && topPiece == "XXY") ||
+      (bottomPiece == "YXX" && topPiece == "XXP")
+    ) {
       return "A";
     } else {
       return "B";
@@ -210,27 +215,7 @@ export default class Game {
       return; // If there is nothing to measure return.
     }
 
-    let isEntanglementOccuring = this.doWeNeedToEntangle(); // THIS IS THE FIRST POSITION OF THE ENTANGLEMENT
-    if (isEntanglementOccuring.length != 0) {
-      let entanglementIsHappeningHere = this.entanglementIsHappeningHere(); // THIS IS ALL OF THE POSITIONS IN THE ENTANGLEMENT
-      console.log(
-        "ENTANGLEMENT IS OCCURING IN THESE PIECES  " +
-          this.entanglementIsHappeningHere()
-      );
-      // ARGUEMENTS TO PASS TO findTimeOfNonEntangledPiece;
-      let x1 = entanglementIsHappeningHere[0];
-      let y1 = entanglementIsHappeningHere[1];
-      let x2 = entanglementIsHappeningHere[2]; 
-      let y2 = entanglementIsHappeningHere[3]; 
-      let x3 = entanglementIsHappeningHere[4]; 
-      let y3 = entanglementIsHappeningHere[5]; 
-      let x4 = entanglementIsHappeningHere[6];
-      let y4 = entanglementIsHappeningHere[7];
-      let findTimeOfNonEntangledPiece = this.findTimeOfNonEntangledPiece();
-      console.log("TIME OF NON ENTANGLED PIECE " + this.findTimeOfNonEntangledPiece(x1, y1, x2, y2, x3, y3, x4, y4));
-      console.log("THIS IS THE ENTANGLEMENT TYPE " + this.findEntanglementType(entanglementIsHappeningHere[0], entanglementIsHappeningHere[1]));
-
-    }
+    // TODO FILTER BASED ON COLUMN CHOICE OF SUPER POSITION
   }
 
   /**
@@ -306,6 +291,7 @@ export default class Game {
    * @param {int} secondPlacement
    */
   updateGameState(firstPlacement, secondPlacement) {
+    console.log("UPDATING  GAME STATE");
     let newGameState = [];
     let wasCertainMove = firstPlacement == secondPlacement;
     let gameStateEmpty = this.#gameState.length == 0;
@@ -321,7 +307,7 @@ export default class Game {
         newGameState.push(vectorTwo);
         this.#gameState = newGameState;
       }
-      return;
+      return; // IF THE GAME STATE IS EMPTY WE DO NOT WANT TO CHECK FOR ENTANGLEMENT
     }
 
     if (wasCertainMove) {
@@ -338,9 +324,84 @@ export default class Game {
       }
     }
 
+    //UPDATE GAME STATE
+    // FILTER IF ENTANGLEMENT
+
     this.#gameState = newGameState;
+    console.log("THIS IS GAME STATE " + this.#gameState);
   }
 
+  handleEntanglement(firstPlacement, secondPlacement) {
+    let isEntanglementOccuring = this.doWeNeedToEntangle(
+      firstPlacement,
+      secondPlacement
+    ); // THIS IS THE FIRST POSITION OF THE ENTANGLEMENT
+    console.log("THIS WHERE ENTANGLEMENT IS HAPPENING BELOW ");
+    console.log(isEntanglementOccuring);
+    if (isEntanglementOccuring.length != 0) {
+      let entanglementIsHappeningHere = this.entanglementIsHappeningHere(
+        firstPlacement,
+        secondPlacement
+      ); // THIS IS ALL OF THE POSITIONS IN THE ENTANGLEMENT
+      console.log(
+        "ENTANGLEMENT IS OCCURING IN THESE PIECES  " +
+          entanglementIsHappeningHere
+      );
+      // ARGUEMENTS TO PASS TO findTimeOfNonEntangledPiece;
+      let x1 = entanglementIsHappeningHere[0];
+      let y1 = entanglementIsHappeningHere[1];
+      let x2 = entanglementIsHappeningHere[2];
+      let y2 = entanglementIsHappeningHere[3];
+      let x3 = entanglementIsHappeningHere[4];
+      let y3 = entanglementIsHappeningHere[5];
+      let x4 = entanglementIsHappeningHere[6];
+      let y4 = entanglementIsHappeningHere[7];
+      let findTimeOfNonEntangledPiece = this.findTimeOfNonEntangledPiece();
+      let entanglementType = this.findEntanglementType(
+        isEntanglementOccuring[0],
+        isEntanglementOccuring[1]
+      );
+      console.log(
+        "TIME OF NON ENTANGLED PIECE " +
+          this.findTimeOfNonEntangledPiece(x1, y1, x2, y2, x3, y3, x4, y4)
+      );
+      console.log(
+        "THIS IS THE ENTANGLEMENT TYPE " +
+          this.findEntanglementType(
+            entanglementIsHappeningHere[0],
+            entanglementIsHappeningHere[1]
+          )
+      );
+      let choice = this.getRandomIntInclusiveExclusive(0, 2);
+      let chosenColumn = choice == 0 ? firstPlacement : secondPlacement;
+      let superpositionIndex = this.#gameState[0].length - 1; // length - 1 because of zero indexing
+      console.log("THIS IS THE CHOSEN COLUMN: " + chosenColumn);
+      console.log(superpositionIndex);
+      if (entanglementType == "A") {
+        this.#gameState = this.#gameState.filter(
+          (game) =>
+            (game.charAt(superpositionIndex) == chosenColumn &&
+              game.charAt(superpositionIndex - 1) == chosenColumn) || // THIS IS THE ALL CASE
+            (game.charAt(superpositionIndex) != chosenColumn &&
+              game.charAt(superpositionIndex - 1) != chosenColumn) // THIS IS THE NOTHING CASE
+        );
+      } else {
+        this.#gameState = this.#gameState.filter(
+          (game) =>
+            !(
+              (game.charAt(superpositionIndex) == chosenColumn &&
+                game.charAt(superpositionIndex - 1) == chosenColumn) || // THIS IS THE ALL CASE
+              (game.charAt(superpositionIndex) != chosenColumn &&
+                game.charAt(superpositionIndex - 1) != chosenColumn)
+            ) // THIS IS THE NOTHING CASE
+        );
+      }
+    }
+    console.log("GAMESTATES AFTER ENTANGLEMENT : ");
+    for (let i = 0; i < this.#gameState.length; i++) {
+      console.log(this.#gameState[i]);
+    }
+  }
   /**
    * Checks for an uncertain under the pieces played in a given column
    * @param {int} column -> column to check for uncertain pieces in
@@ -570,46 +631,70 @@ export default class Game {
    * This function returns an array of a single x and y position if we need to entangle. It returns an empty array otherwise.
    * @return [x, y] or []
    */
-  doWeNeedToEntangle() {
+  doWeNeedToEntangle(firstPlacement, secondPlacement) {
     let returnValue = [];
-    let piecesToBeMeasured = this.findPiecesToMeasure();
-    if (piecesToBeMeasured.length == 0) {
-      return; // if this happens this function should not have been called
+
+    let firstX = firstPlacement;
+    let secondX = secondPlacement;
+    let firstY = this.firstOpenRow(this.#board, firstPlacement) + 1; // PLUS ONE BECAUSE WE UPDATED THE BOARD AND WE WANT THE FIRST OCCUPIED ROW
+    let secondY = this.firstOpenRow(this.#board, secondPlacement) + 1;
+
+    // CHECK TO MAKE SURE WE DON'T GO TO INDEX OUT OF BOUNDS
+
+    // CHECK FOR DOUBLE ENTANGLEMENT. THIS CHECK IS OK BECAUSE WE ONLY EVER HAVE THREE QUANTUM PIECES ON THE BOARD AT A TIME
+    if (firstY < 8) {
+      let pieceBelowFirst = this.#board[firstY + 1][firstX];
+      let secondPieceBelowFirst = this.#board[firstY + 2][firstX];
+      let piecesBelowAlreadyEntangled =
+        (secondPieceBelowFirst == "YXX" && pieceBelowFirst == "XXP") ||
+        (secondPieceBelowFirst == "XXY" && pieceBelowFirst == "PXX") ||
+        (secondPieceBelowFirst == "PXX" && pieceBelowFirst == "XXY") ||
+        (secondPieceBelowFirst == "XXP" && pieceBelowFirst == "YXX");
+      if (piecesBelowAlreadyEntangled) {
+        return [];
+      }
     }
-    if (piecesToBeMeasured[1] == 0 || piecesToBeMeasured[3] == 0) {
-      return; // if this happens we need to prevent index out of bounds
+
+    if (secondY < 8) {
+      let pieceBelowFirst = this.#board[secondY + 1][secondX];
+      let secondPieceBelowFirst = this.#board[secondY + 2][secondX];
+      let piecesBelowAlreadyEntangled =
+        (secondPieceBelowFirst == "YXX" && pieceBelowFirst == "XXP") ||
+        (secondPieceBelowFirst == "XXY" && pieceBelowFirst == "PXX") ||
+        (secondPieceBelowFirst == "PXX" && pieceBelowFirst == "XXY") ||
+        (secondPieceBelowFirst == "XXP" && pieceBelowFirst == "YXX");
+      if (piecesBelowAlreadyEntangled) {
+        return [];
+      }
     }
 
-    let firstX = piecesToBeMeasured[0];
-    let secondX = piecesToBeMeasured[2];
-    let firstY = piecesToBeMeasured[1];
-    let secondY = piecesToBeMeasured[3];
-
-    let firstPiece = this.#board[firstY][firstX];
-    let secondPiece = this.#board[secondY][secondX];
-    let pieceAboveFirst = this.#board[firstY - 1][firstX];
-    let pieceAboveSecond = this.#board[secondY - 1][secondX];
-    let isFirstPieceEntangled =
-      (firstPiece == "YXX" && pieceAboveFirst == "XXP") ||
-      (firstPiece == "XXY" && pieceAboveFirst == "PXX") ||
-      (firstPiece == "PXX" && pieceAboveFirst == "XXY") ||
-      (firstPiece == "XXP" && pieceAboveFirst == "YXX");
-
-    let isSecondPieceEntangled =
-      (secondPiece == "YXX" && pieceAboveFirst == "XXP") ||
-      (secondPiece == "XXY" && pieceAboveSecond == "PXX") ||
-      (secondPiece == "PXX" && pieceAboveSecond == "XXY") ||
-      (secondPiece == "XXP" && pieceAboveSecond == "YXX");
-
-    if (isFirstPieceEntangled) {
-      returnValue.push(firstX);
-      returnValue.push(firstY);
-      return returnValue;
+    if (firstY < 9) {
+      let firstPiece = this.#board[firstY][firstX];
+      let pieceBelowFirst = this.#board[firstY + 1][firstX];
+      let isFirstPieceEntangled =
+        (firstPiece == "YXX" && pieceBelowFirst == "XXP") ||
+        (firstPiece == "XXY" && pieceBelowFirst == "PXX") ||
+        (firstPiece == "PXX" && pieceBelowFirst == "XXY") ||
+        (firstPiece == "XXP" && pieceBelowFirst == "YXX");
+      if (isFirstPieceEntangled) {
+        returnValue.push(firstX);
+        returnValue.push(firstY);
+        return returnValue;
+      }
     }
-    if (isSecondPieceEntangled) {
-      returnValue.push(secondX);
-      returnValue.push(secondY);
-      return returnValue;
+    if (secondY < 9) {
+      let secondPiece = this.#board[secondY][secondX];
+      let pieceBelowSecond = this.#board[secondY + 1][secondX];
+      let isSecondPieceEntangled =
+        (secondPiece == "YXX" && pieceBelowFirst == "XXP") ||
+        (secondPiece == "XXY" && pieceBelowSecond == "PXX") ||
+        (secondPiece == "PXX" && pieceBelowSecond == "XXY") ||
+        (secondPiece == "XXP" && pieceBelowSecond == "YXX");
+      if (isSecondPieceEntangled) {
+        returnValue.push(secondX);
+        returnValue.push(secondY);
+        return returnValue;
+      }
     }
 
     return returnValue;
@@ -697,6 +782,7 @@ export default class Game {
     this.#moveStates = this.#moveStates.concat("V");
     this.updateGameState(firstPlacement, column);
     this.gameStateToBoard();
+    this.handleEntanglement(firstPlacement, column);
 
     return "done";
   }
@@ -735,6 +821,7 @@ export default class Game {
     this.#moveStates = this.#moveStates.concat("H");
     this.updateGameState(firstPlacement, column);
     this.gameStateToBoard();
+    this.handleEntanglement(firstPlacement, column);
     return "done";
   }
 
@@ -868,15 +955,8 @@ export default class Game {
       // Update time on board first because the place functions will set the time on board value for the new piece to 1 and we don't want to accidentally update it to 2
 
       this.incrementTimeOnBoard();
-      this.printTimeOnBoard();
+
       this.measure();
-      console.log(
-        "RANDOM BETWEEN " + this.getRandomIntInclusiveExclusive(0, 4)
-      );
-      console.log("GAME STATE " + this.#gameState);
-      console.log("MOVE STATES " + this.#moveStates);
-      console.log("BOARD ");
-      this.printBoard();
 
       this.changeTurn();
     }
