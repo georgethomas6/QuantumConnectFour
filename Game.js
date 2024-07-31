@@ -13,7 +13,7 @@ export default class Game {
   #board; // A 10 x 7 array of strings, each representing a cell in the board
   #turnInProgress; // the move that is in the process of being made
   #gameState;
-  #measuringQueue; //An array that we will treat as a queue 
+  #measuringQueue; //An array that we will treat as a queue
   #moveStates; // this is a string of the type of moves that have been played, consists of V, C, H
   #graphics;
   constructor() {
@@ -56,7 +56,7 @@ export default class Game {
   /**
    * @returns quene
    */
-  get measuringQueue(){
+  get measuringQueue() {
     return this.#measuringQueue;
   }
   /**
@@ -116,8 +116,8 @@ export default class Game {
   /**
    * Increments all of the counters in the measuringQueue
    */
-  incrementMeasurementCounts(){
-    for (let i = 0; i < this.#measuringQueue.length; i++){
+  incrementMeasurementCounts() {
+    for (let i = 0; i < this.#measuringQueue.length; i++) {
       this.#measuringQueue[i][0]++;
     }
   }
@@ -139,6 +139,39 @@ export default class Game {
    * the gameState after it measures. If there is entanglement it just selects one of the gameStates.
    */
   measure() {
+    // Make sure the measuring queue is non empty, and the thing at the top of the queue is ready to be measured
+    if (this.#measuringQueue.length == 0) {
+      return;
+    }
+
+    if (this.#measuringQueue[0][0] != 3) {
+      return;
+    }
+
+    let firstHalfOfSuperPosition = this.#measuringQueue[0][1];
+    let secondHalfOfSuperPosition = this.#measuringQueue[0][2];
+    let firstX = firstHalfOfSuperPosition[0];
+    let secondX = secondHalfOfSuperPosition[0];
+    let firstY = firstHalfOfSuperPosition[1];
+    let secondY = secondHalfOfSuperPosition[1];
+
+    let isFirstHalfEntangled = this.shouldEntangle(firstX, firstY);
+    let isSecondHalfEntangled = this.shouldEntangle(secondX, secondY);
+
+    if (isFirstHalfEntangled) {
+      let entanglementType = this.entangleType(firstX, firstY);
+      console.log(entanglementType);
+      this.#measuringQueue.shift(); // this gets rid of the entry at the top of the measuringQueue
+      this.gameStateToBoard();
+      return; // make function end before moving on to the code below
+    } else if (isSecondHalfEntangled) {
+      let entanglementType = this.entangleType(secondX, secondY);
+      console.log(entanglementType);
+      this.#measuringQueue.shift(); // this gets rid of the entry at the top of the measuringQueue
+      this.gameStateToBoard();
+      return; // make function end before moving on to the code below
+    }
+
     this.#gameState = this.#gameState.filter(
       (game) =>
         game.charAt(entanglementIndex) == chosenCharacterAtEntanglementIndex
@@ -147,6 +180,42 @@ export default class Game {
     this.#gameState = this.#gameState.filter(
       (game) => game.charAt(superpositionIndex) == choice
     );
+
+    this.#measuringQueue.shift(); // this gets rid of the entry at the top of the measuringQueue
+    this.gameStateToBoard();
+  }
+
+  /**
+   * Returns true if entanglement should occur, false otherwise
+   */
+  shouldEntangle(X, Y) {
+    if (Y == 0){
+      return;
+    }
+    let bottomPiece = this.#board[Y][X];
+    let topPiece = this.#board[Y - 1][X];
+    let shouldEntangle =
+      (bottomPiece == "PXX" && topPiece == "XXY") ||
+      (bottomPiece == "YXX" && topPiece == "XXP") ||
+      (bottomPiece == "XXY" && topPiece == "PXX") ||
+      (bottomPiece == "XXP" && topPiece == "YXX");
+    return shouldEntangle;
+  }
+
+  /**
+   * This function returns "A" if the case of entanglement is all or nothing. Otherwise it returns "B". Should only be called in measure().
+   */
+  entangleType(X, Y) {
+    let bottomPiece = this.#board[Y][X];
+    let topPiece = this.#board[Y - 1][X];
+    let allOrNothingCase =
+      (bottomPiece == "PXX" || bottomPiece == "YXX") &&
+      (topPiece == "XXP" || topPiece == "XXY");
+
+    if (allOrNothingCase) {
+      return "A";
+    }
+    return "B";
   }
 
   /**
@@ -274,87 +343,8 @@ export default class Game {
       }
     }
     this.#gameState = newGameState;
-    if (this.shouldEntangle()) {
-      let foundEntanglement = this.findEntanglement();
-      let entanglementType = this.entangleType(
-        foundEntanglement[0],
-        foundEntanglement[1],
-        foundEntanglement[2]
-      );
-      this.entangle(entanglementType);
-    }
-  }
 
-  /**
-   * This function finds two entangled pieces on the board. Should only be called if entanglement has been found.
-   * @returns an the column entanglement is occuring in, the height of the bottom and top height of the entangled pieces in that order
-   */
-  findEntanglement() {
-    for (let y = 9; y > 0; y--) {
-      for (let x = 0; x < 7; x++) {
-        let entanglementHappened =
-          (this.#board[y][x] == "PXX" && this.#board[y - 1][x] == "XXY") ||
-          (this.#board[y][x] == "XXP" && this.#board[y - 1][x] == "YXX") ||
-          (this.#board[y][x] == "YXX" && this.#board[y - 1][x] == "XXP") ||
-          (this.#board[y][x] == "XXY" && this.#board[y - 1][x] == "PXX");
-        if (entanglementHappened) {
-          let ret = [];
-          ret.push(x);
-          ret.push(y);
-          ret.push(y - 1);
-          return ret;
-        }
-      }
-    }
-  }
-
-  /**
-   * This function checks to see if entanglement should occur at the places where measurement is equal to 3;
-   * @returns true if entanglement should occur, false otherwise
-   */
-  shouldEntangle() {
-    //TODO
-  }
-
-  /**
-   * This function checks for entanglement in the given row and column
-   * @returns true if there is entanglement, false otherwise
-   */
-  checkForEntanglement(column, row) {
-    //TODO CHECK FOR INDEX OUT OF BOUNDS BUGS
-    let shouldEntangle =
-      (this.#board[row][column] == "PXX" &&
-        this.#board[row - 1][column] == "XXY") ||
-      (this.#board[row][column] == "XXP" &&
-        this.#board[row - 1][column] == "YXX") ||
-      (this.#board[row][column] == "YXX" &&
-        this.#board[row - 1][column] == "XXP") ||
-      (this.#board[row][column] == "XXY" &&
-        this.#board[row - 1][column] == "PXX");
-
-    return shouldEntangle;
-  }
-
-  /**
-   * This function returns A if it is an all or nothing case of entanglement, and B if it is not the all of nothing case. This function
-   * should only be called when an instance of entanglement has been found.
-   * @param {int} column -> column entanglement occurs in
-   * @param {int} upperHeight -> height of the bottom entangled piece
-   * @param {int} lowerHeight -> height of the top entangled pice
-   * @returns "A" if it is the all or nothing case, B otherwise
-   */
-  entangleType(column, upperHeight, lowerHeight) {
-    let bottomPiece = this.#board[lowerHeight][column];
-    let topPiece = this.#board[upperHeight][column];
-    let allOrNothingCase =
-      (bottomPiece == "PXX" || bottomPiece == "YXX") &&
-      (topPiece == "XXP" || topPiece == "XXY");
-    //Horiztonal then Vertical
-    if (allOrNothingCase) {
-      return "A";
-    } else {
-      return "B";
-    }
+    // TODO ADD ENTANGLEMENT INTO GAMESTATE
   }
 
   /**
@@ -626,13 +616,12 @@ export default class Game {
     let row1 = this.firstOpenRow(this.#board, firstPlacement);
     let row2 = this.firstOpenRow(this.#board, column);
 
-    firstHalfOfSuperPosition.push(row1); // Add depth of first 
+    firstHalfOfSuperPosition.push(row1); // Add depth of first
     secondHalfOfSuperPosition.push(row2);
 
     addToMeasureQueue.push([0]); // push the number of turns the piece has been on the board, zero so it will be 1 when we increment
-    addToMeasureQueue.push(firstHalfOfSuperPosition);
-    addToMeasureQueue.push(secondHalfOfSuperPosition);
-
+    addToMeasureQueue.push(firstHalfOfSuperPosition); // push the first set of options onto the thing we are adding to measurement queue
+    addToMeasureQueue.push(secondHalfOfSuperPosition); // push the second set
 
     this.#measuringQueue.push(addToMeasureQueue);
 
@@ -643,13 +632,13 @@ export default class Game {
     return "done";
   }
 
-  printQueue(){
-    for (let i = 0; i < this.#measuringQueue.length; i++){
-      for (let t = 0; t < this.measuringQueue[i].length; t++){
-        console.log(`ARRAY AT INDEX ${i}: ${this.#measuringQueue[i][t]}`);  
+  printQueue() {
+    for (let i = 0; i < this.#measuringQueue.length; i++) {
+      for (let t = 0; t < this.measuringQueue[i].length; t++) {
+        console.log(`ARRAY AT INDEX ${i}: ${this.#measuringQueue[i][t]}`);
       }
-      console.log();      
-    } 
+      console.log();
+    }
   }
   /**
    * If a horizontal piece has not been placed during the turn, this function temporarily places a horizontal piece
@@ -690,7 +679,7 @@ export default class Game {
 
     firstHalfOfSuperPosition.push(firstPlacement);
     secondHalfOfSuperPosition.push(column);
-    firstHalfOfSuperPosition.push(row1); // Add depth of first 
+    firstHalfOfSuperPosition.push(row1); // Add depth of first
     secondHalfOfSuperPosition.push(row2);
 
     addToMeasureQueue.push([0]); // push the number of turns the piece has been on the board, zero so that it will be 1 when we increment
@@ -815,6 +804,11 @@ export default class Game {
     );
   }
 
+  printBoard(){
+    for (let i = 0; i < this.#board.length; i++ ){
+      console.log(this.#board[i]);
+    }
+  }
   /**
    * Handles a place button click
    */
@@ -822,26 +816,25 @@ export default class Game {
     if (this.place() == "done") {
       // Update time on board first because the place functions will set the time on board value for the new piece to 1 and we don't want to accidentally update it to 2
 
-
-    this.printQueue();
-    console.log("THIS IS MEASURING QUEUE AFTER INCREMENTING: ")
-    this.incrementMeasurementCounts();
+    
+      this.gameStateToBoard();
+      this.incrementMeasurementCounts();
+      this.measure();
 
       this.printQueue();
-      this.gameStateToBoard();
 
       this.changeTurn();
-    this.#graphics.clearCanvasGrey();
-    this.#graphics.drawGridLines();
-    this.#graphics.drawPieces(this.#board);
-    this.#graphics.drawTurnInProgress(
-      this.#turnInProgress.column,
-      this.turnInProgressDepth(this.#turnInProgress.column),
-      this.#turnInProgress.color,
-      this.#turnInProgress.state
-    );
+      this.#graphics.clearCanvasGrey();
+      this.#graphics.drawGridLines();
+      this.#graphics.drawPieces(this.#board);
+      this.#graphics.drawTurnInProgress(
+        this.#turnInProgress.column,
+        this.turnInProgressDepth(this.#turnInProgress.column),
+        this.#turnInProgress.color,
+        this.#turnInProgress.state
+      );
+    }
   }
-}
 
   /**
    * Handles a restart button click
@@ -857,5 +850,4 @@ export default class Game {
     this.#moveStates = "";
     this.start();
   }
-
 }
