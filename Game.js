@@ -186,6 +186,38 @@ export default class Game {
   }
 
   /**
+   * This function handles adjusting the time on the board after an entanglement is measured. the board needs to be updated before this function is called
+   * @param {int} timeofUnentangled -> the time the unentangled superposition has been on the board
+   */
+  updateTimeOnBoardAfterEntangledMeasurement(indexOfMeasuredMove) {
+    let newTimeOnBoard = this.initNewTimeOnBoard();
+    for (let y = 9; y >= 0; y--) {
+      for (let x = 0; x < 7; x++) {
+        let isCertain =
+          this.#board[y][x] == "PPP" || this.#board[y][x] == "YYY";
+        if (isCertain) {
+          newTimeOnBoard[y][x] = 4;
+        } else if (this.#board[y][x] == "XXX") {
+          continue;
+        } else {
+          let inVerticalState =
+            this.#board[y][x] == "XXP" || this.#board[y][x] == "XXY";
+          let inHorizontalState =
+            this.#board[y][x] == "PXX" || this.#board[y][x] == "YXX";
+          if (inVerticalState) {
+            let time = this.#moveStates.indexOf("V") - indexOfMeasuredMove;
+            newTimeOnBoard[y][x] = time;
+          } else if (inHorizontalState) {
+            let time = this.#moveStates.indexOf("H") - indexOfMeasuredMove;
+            newTimeOnBoard[y][x] = time;
+          }
+        }
+      }
+    }
+    this.#timeOnBoard = newTimeOnBoard;
+  }
+
+  /**
    * Returns "A" if it is an all or nothing case, "B" otherwise
    * @param {int} column -> entanglement is occuring in
    * @param {int} -> row first height in the entanglement
@@ -213,6 +245,21 @@ export default class Game {
     let piecesToBeMeasured = this.findPiecesToMeasure();
     if (piecesToBeMeasured.length == 0) {
       return; // If there is nothing to measure return.
+    }
+
+    if (this.#moveStates.charAt(this.#moveStates.length - 1) == "C") {
+      // If the last move is certain we just need to pick a state out of thep possible ones
+      let choice = this.getRandomIntInclusiveExclusive(
+        0,
+        this.#gameState.length
+      );
+      let newGameState = this.#gameState[choice];
+      this.#gameState = this.#gameState;
+      let newMoveState = "";
+      for (let i = 0; i < this.#moveStates.length; i++) {
+        newMoveState = newGameState.concat("C");
+      }
+      this.#moveStates = newMoveState;
     }
 
     // TODO FILTER BASED ON COLUMN CHOICE OF SUPER POSITION
@@ -331,6 +378,11 @@ export default class Game {
     console.log("THIS IS GAME STATE " + this.#gameState);
   }
 
+  /**
+   * This function filters the game states if entanglement should occur. Should be called at the end of placing a vertical or horizontal piece.
+   * @param {int} firstPlacement -> where the first half of the superposition was placed
+   * @param {int} secondPlacement -> where the second half of the superposition was placed
+   */
   handleEntanglement(firstPlacement, secondPlacement) {
     let isEntanglementOccuring = this.doWeNeedToEntangle(
       firstPlacement,
@@ -610,21 +662,76 @@ export default class Game {
   }
 
   /**
+   * Returns the first instance of a value occuring on the board in a given column
+   * @param {string} target
+   * @param {int} column
+   * Returns row of first occurance of target. Returns -1 if not found
+   */
+  findInColumn(target, column) {
+    for (let y = 9; y > 0; y--) {
+    let foundTarget = this.#board[y][column] == target;
+      if (foundTarget) {
+        return y;
+      }
+    }
+    return -1;
+  }
+  /**
    * This function tries to find pieces who need to be measured. It returns an empty array if no pieces need to be measured.
    * @returns [x1, y1, x2, y2] or []
    */
   findPiecesToMeasure() {
-    let returnValue = [];
-    for (let y = 9; y >= 0; y--) {
-      for (let x = 0; x < 7; x++) {
-        let pieceNeedsToBeMeasured = this.#timeOnBoard[y][x] == 3;
-        if (pieceNeedsToBeMeasured) {
-          returnValue.push(x);
-          returnValue.push(y);
-        }
-      }
+    let indexToMeasure = this.#moveStates.length - 3;
+    if (indexToMeasure < 0) {
+      return [];
     }
-    return returnValue;
+
+    if (this.#moveStates.charAt(indexToMeasure) == "C") {
+      return [];
+    }
+
+    let returnValue = [];
+    let state = this.#moveStates.charAt(indexToMeasure);
+    let options = [];
+    options.push(parseInt(this.getIthCharacter(this.#gameState, indexToMeasure)[0]));
+    options.push(parseInt(this.getIthCharacter(this.#gameState, indexToMeasure)[1]));
+  
+    let colorToLookFor = this.#moveStates.length % 2 - 1;
+    console.log("COLOR TO LOOK FOR " + colorToLookFor);
+    console.log("THIS IS OPTIONS " + options);
+    if (colorToLookFor == 0 && state == "V") {
+      let target = "XXP";
+      returnValue.push(options[0]);
+      returnValue.push(this.findInColumn(target, options[0]));
+      returnValue.push(options[1]);
+      returnValue.push(this.findInColumn(target, options[1]));
+      return returnValue;
+    } else if (colorToLookFor == 0 && state == "H") {
+      let target = "PXX";
+      console.log("VERY NICEUH");
+      returnValue.push(options[0]);
+      returnValue.push(this.findInColumn(target, options[0]));
+      returnValue.push(options[1]);
+      returnValue.push(this.findInColumn(target, options[1]));
+      console.log(returnValue);
+      return returnValue;
+    } else if (colorToLookFor == 1 && state == "V") {
+      let target = "XXY";
+      returnValue.push(options[0]);
+      returnValue.push(this.findInColumn(target, options[0]));
+      returnValue.push(options[1]);
+      returnValue.push(this.findInColumn(target, options[1]));
+      return returnValue;
+    } else if (colorToLookFor == 1 && state == "H") {
+      let target = "YXX";
+      returnValue.push(options[0]);
+      returnValue.push(this.findInColumn(target, options[0]));
+      returnValue.push(options[1]);
+      returnValue.push(this.findInColumn(target, options[1]));
+      return returnValue;
+    }
+
+    return [];
   }
 
   /**
@@ -782,6 +889,7 @@ export default class Game {
     this.#moveStates = this.#moveStates.concat("V");
     this.updateGameState(firstPlacement, column);
     this.gameStateToBoard();
+    // We have to call after gamdState to board because handleEntanglement relies on the data stored in the board to find entanglement
     this.handleEntanglement(firstPlacement, column);
 
     return "done";
@@ -821,6 +929,7 @@ export default class Game {
     this.#moveStates = this.#moveStates.concat("H");
     this.updateGameState(firstPlacement, column);
     this.gameStateToBoard();
+    // We have to call after gamdState to board because handleEntanglement relies on the data stored in the board to find entanglement
     this.handleEntanglement(firstPlacement, column);
     return "done";
   }
@@ -954,9 +1063,10 @@ export default class Game {
     if (this.place() == "done") {
       // Update time on board first because the place functions will set the time on board value for the new piece to 1 and we don't want to accidentally update it to 2
 
-      this.incrementTimeOnBoard();
-
-      this.measure();
+      // this.incrementTimeOnBoard();
+      console.log("THIS IS PIECE TO MEASURE" );
+      console.log(this.findPiecesToMeasure());
+      //      this.measure();
 
       this.changeTurn();
     }
