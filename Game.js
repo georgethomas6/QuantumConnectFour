@@ -13,7 +13,6 @@ export default class Game {
   #board; // A 10 x 7 array of strings, each representing a cell in the board
   #turnInProgress; // the move that is in the process of being made
   #gameState;
-  #measuringQueue; //An array that we will treat as a queue
   #moveStates; // this is a string of the type of moves that have been played, consists of V, C, H
   #graphics;
   constructor() {
@@ -23,7 +22,6 @@ export default class Game {
       let row = ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"];
       this.#board.push(row);
     }
-    this.#measuringQueue = [];
     this.#turnInProgress = new TurnInProgress("purple");
     this.#graphics = new Graphics();
     this.#gameState = []; // this will be an array of strings
@@ -53,12 +51,6 @@ export default class Game {
     return this.#gameState;
   }
 
-  /**
-   * @returns quene
-   */
-  get measuringQueue() {
-    return this.#measuringQueue;
-  }
   /**
    * @returns string
    */
@@ -113,110 +105,16 @@ export default class Game {
     return newBoard;
   }
 
-  /**
-   * Increments all of the counters in the measuringQueue
-   */
-  incrementMeasurementCounts() {
-    for (let i = 0; i < this.#measuringQueue.length; i++) {
-      this.#measuringQueue[i][0]++;
-    }
-  }
-  /**
-   * Finds the first index in all gameStates in the gameState array where a superposition occured. Should
-   * only be called if there is a superposition
-   * @returns int index at which the first superposition occured.
-   */
-  findSuperpositionIndex() {
-    for (let i = 0; i < this.#moveStates.length; i++) {
-      if (this.#moveStates.charAt(i) != "C") {
-        return i;
-      }
-    }
-  }
+
 
   /**
    * This function performs a measurement. It finds the pieces on the board that is about to be measured, and filters
    * the gameState after it measures. If there is entanglement it just selects one of the gameStates.
    */
   measure() {
-    // Make sure the measuring queue is non empty, and the thing at the top of the queue is ready to be measured
-    if (this.#measuringQueue.length == 0) {
-      return;
-    }
+   
+}
 
-    if (this.#measuringQueue[0][0] != 3) {
-      return;
-    }
-
-    /*
-
-    let newMoveState = "";
-    for (let i = 0; i < this.#moveStates.length; i++) {
-      if (i <= superpositionIndex) {
-        newMoveState = newMoveState.concat("C");
-        continue;
-      }
-      newMoveState = newMoveState.concat(this.#moveStates.charAt(i));
-    }
-      */
-
-    //this.#moveStates = newMoveState;
-    this.#measuringQueue.shift(); // this gets rid of the entry at the top of the measuringQueue
-    this.gameStateToBoard();
-  }
-
-  /**
-   * Returns true if entanglement should occur, false otherwise
-   */
-  shouldEntangle(X, Y) {
-    if (Y == 0) {
-      return;
-    }
-    let bottomPiece = this.#board[Y][X];
-    let topPiece = this.#board[Y - 1][X];
-    let shouldEntangle =
-      (bottomPiece == "PXX" && topPiece == "XXY") ||
-      (bottomPiece == "YXX" && topPiece == "XXP") ||
-      (bottomPiece == "XXY" && topPiece == "PXX") ||
-      (bottomPiece == "XXP" && topPiece == "YXX");
-    return shouldEntangle;
-  }
-
-  /**
-   * This function returns "A" if the case of entanglement is all or nothing. Otherwise it returns "B". Should only be called in measure().
-   */
-  entangleType(X, Y) {
-    let bottomPiece = this.#board[Y][X];
-    let topPiece = this.#board[Y - 1][X];
-    let allOrNothingCase =
-      (bottomPiece == "PXX" || bottomPiece == "YXX") &&
-      (topPiece == "XXP" || topPiece == "XXY");
-
-    if (allOrNothingCase) {
-      return "A";
-    }
-    return "B";
-  }
-
-  /**
-   * Returns an array containing the ith character of each string
-   * @param {string[]} gameStates -> an array of gameStates
-   * @returns char[] -> an array containing the ith character of each string;
-   */
-  getIthCharacter(gameStates, i) {
-    // Use a Set to store unique characters
-    const uniqueChars = new Set();
-
-    // Iterate over each string and add the character at the given index to the Set
-    gameStates.forEach((str) => {
-      if (str.length > i) {
-        uniqueChars.add(str.charAt(i));
-      }
-    });
-
-    // Convert the Set to an array and return it
-    return Array.from(uniqueChars);
-  }
 
   /**
    * Returns an array of the rows at which the pieces will fall
@@ -324,7 +222,6 @@ export default class Game {
     }
 
     this.#gameState = newGameState;
-
   }
 
   /**
@@ -508,6 +405,26 @@ export default class Game {
     }
   }
 
+    /**
+   * Returns an array containing the ith character of each string
+   * @param {string[]} gameStates -> an array of gameStates
+   * @returns char[] -> an array containing the ith character of each string;
+   */
+    getIthCharacter(gameStates, i) {
+      // Use a Set to store unique characters
+      const uniqueChars = new Set();
+  
+      // Iterate over each string and add the character at the given index to the Set
+      gameStates.forEach((str) => {
+        if (str.length > i) {
+          uniqueChars.add(str.charAt(i));
+        }
+      });
+  
+      // Convert the Set to an array and return it
+      return Array.from(uniqueChars);
+    }
+
   /**
    * First this function checks to see if the placement is valid. If the placement was valid it places a piece in the correct state on the board
    * @returns "done" if the turn is over, if not it returns "notDone"
@@ -566,25 +483,6 @@ export default class Game {
       firstPlacement
     ] = "XXX";
 
-    let addToMeasureQueue = [];
-    let firstHalfOfSuperPosition = [];
-    let secondHalfOfSuperPosition = [];
-    firstHalfOfSuperPosition.push(firstPlacement);
-    secondHalfOfSuperPosition.push(column);
-
-    // Get the heights to add to our entries
-    let row1 = this.firstOpenRow(this.#board, firstPlacement);
-    let row2 = this.firstOpenRow(this.#board, column);
-
-    firstHalfOfSuperPosition.push(row1); // Add depth of first
-    secondHalfOfSuperPosition.push(row2);
-
-    addToMeasureQueue.push([0]); // push the number of turns the piece has been on the board, zero so it will be 1 when we increment
-    addToMeasureQueue.push(firstHalfOfSuperPosition); // push the first set of options onto the thing we are adding to measurement queue
-    addToMeasureQueue.push(secondHalfOfSuperPosition); // push the second set
-
-    this.#measuringQueue.push(addToMeasureQueue);
-
     //Update gameState
     this.#moveStates = this.#moveStates.concat("V");
     this.updateGameState(firstPlacement, column);
@@ -593,14 +491,6 @@ export default class Game {
     return "done";
   }
 
-  printQueue() {
-    for (let i = 0; i < this.#measuringQueue.length; i++) {
-      for (let t = 0; t < this.measuringQueue[i].length; t++) {
-        console.log(`ARRAY AT INDEX ${i}: ${this.#measuringQueue[i][t]}`);
-      }
-      console.log();
-    }
-  }
   /**
    * If a horizontal piece has not been placed during the turn, this function temporarily places a horizontal piece
    * at the appropriate location above the board. Otherwise, it gets rid of the temporary piece and drops the pieces
@@ -629,25 +519,6 @@ export default class Game {
     this.#board[this.firstOpenRow(this.#board, firstPlacement) + 1][
       firstPlacement
     ] = "XXX";
-
-    let addToMeasureQueue = [];
-    let firstHalfOfSuperPosition = [];
-    let secondHalfOfSuperPosition = [];
-
-    // Get the heights to add to our entries
-    let row1 = this.firstOpenRow(this.#board, firstPlacement);
-    let row2 = this.firstOpenRow(this.#board, column);
-
-    firstHalfOfSuperPosition.push(firstPlacement);
-    secondHalfOfSuperPosition.push(column);
-    firstHalfOfSuperPosition.push(row1); // Add depth of first
-    secondHalfOfSuperPosition.push(row2);
-
-    addToMeasureQueue.push([0]); // push the number of turns the piece has been on the board, zero so that it will be 1 when we increment
-    addToMeasureQueue.push(firstHalfOfSuperPosition);
-    addToMeasureQueue.push(secondHalfOfSuperPosition);
-
-    this.#measuringQueue.push(addToMeasureQueue);
 
     //Update gameState
 
@@ -779,27 +650,25 @@ export default class Game {
     if (this.place() == "done") {
       // Update time on board first because the place functions will set the time on board value for the new piece to 1 and we don't want to accidentally update it to 2
 
-      this.printBoard();
-      this.incrementMeasurementCounts();
-      this.measure();
-      console.log("GAME STATE" + this.#gameState);
-      console.log("MOVE STATES " + this.#moveStates);
 
-      this.printQueue();
+      this.measure();
+      console.log("GAME STATE " + this.#gameState);
+      console.log("MOVE STATES " + this.#moveStates);
+      console.log("BOARD ");
+      this.printBoard();
 
       this.changeTurn();
     }
-      this.#graphics.clearCanvasGrey();
-      this.#graphics.drawGridLines();
-      this.#graphics.drawPieces(this.#board);
-      this.#graphics.drawTurnInProgress(
-        this.#turnInProgress.column,
-        this.turnInProgressDepth(this.#turnInProgress.column),
-        this.#turnInProgress.color,
-        this.#turnInProgress.state
-      );
-    }
-  
+    this.#graphics.clearCanvasGrey();
+    this.#graphics.drawGridLines();
+    this.#graphics.drawPieces(this.#board);
+    this.#graphics.drawTurnInProgress(
+      this.#turnInProgress.column,
+      this.turnInProgressDepth(this.#turnInProgress.column),
+      this.#turnInProgress.color,
+      this.#turnInProgress.state
+    );
+  }
 
   /**
    * Handles a restart button click
@@ -813,7 +682,6 @@ export default class Game {
     this.#turnInProgress = new TurnInProgress("purple");
     this.#gameState = [];
     this.#moveStates = "";
-    this.#measuringQueue = [];
     this.start();
   }
 }
