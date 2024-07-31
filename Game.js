@@ -182,6 +182,24 @@ export default class Game {
 
     return 0;
   }
+
+  /**
+   * Returns "A" if it is an all or nothing case, "B" otherwise
+   * @param {int} column -> entanglement is occuring in
+   * @param {int} -> row first height in the entanglement
+   */
+  findEntanglementType(column, row){
+    if (row == 0){
+      return;  // AVOID INDEX OUT OF BOUNDS
+    }
+    let bottomPiece = this.#board[row][column];
+    let topPiece = this.#board[row - 1][column];
+    if ((bottomPiece == "PXX" || bottomPiece == "YXX") && topPiece == "XXY" || topPiece == "XXP"){
+      return "A";
+    } else {
+      return "B";
+    }
+  }
   /**
    * This function performs a measurement. It finds the pieces on the board that is about to be measured, and filters
    * the gameState after it measures. If there is entanglement it just selects one of the gameStates.
@@ -192,9 +210,9 @@ export default class Game {
       return; // If there is nothing to measure return.
     }
 
-    let isEntanglementOccuring = this.doWeNeedToEntangle();
+    let isEntanglementOccuring = this.doWeNeedToEntangle(); // THIS IS THE FIRST POSITION OF THE ENTANGLEMENT
     if (isEntanglementOccuring.length != 0) {
-      let entanglementIsHappeningHere = this.entanglementIsHappeningHere();
+      let entanglementIsHappeningHere = this.entanglementIsHappeningHere(); // THIS IS ALL OF THE POSITIONS IN THE ENTANGLEMENT
       console.log(
         "ENTANGLEMENT IS OCCURING IN THESE PIECES  " +
           this.entanglementIsHappeningHere()
@@ -210,6 +228,8 @@ export default class Game {
       let y4 = entanglementIsHappeningHere[7];
       let findTimeOfNonEntangledPiece = this.findTimeOfNonEntangledPiece();
       console.log("TIME OF NON ENTANGLED PIECE " + this.findTimeOfNonEntangledPiece(x1, y1, x2, y2, x3, y3, x4, y4));
+      console.log("THIS IS THE ENTANGLEMENT TYPE " + this.findEntanglementType(entanglementIsHappeningHere[0], entanglementIsHappeningHere[1]));
+
     }
   }
 
