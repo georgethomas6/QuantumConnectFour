@@ -426,6 +426,15 @@ export default class Game {
     }
   }
 
+  getRandomIntInclusiveExclusive(min, max) {
+    // Ensure min and max are integers
+    min = Math.ceil(min);
+    max = Math.floor(max);
+  
+    // Generate a random integer between min (inclusive) and max (exclusive)
+    return Math.floor(Math.random() * (max - min)) + min;
+  }
+
   /**
    * This function tries to find pieces who need to be measured. It returns an empty array if no pieces need to be measured.
    * @returns [x1, y1, x2, y2] or []
@@ -488,7 +497,6 @@ export default class Game {
     returnValue.push(secondX);
     returnValue.push(secondY);
     return returnValue;
-
   }
 
   return returnValue;
@@ -749,7 +757,7 @@ export default class Game {
       this.incrementTimeOnBoard();
       this.printTimeOnBoard();
       this.measure();
-      console.log("ENTANGLEMENT AT " + this.doWeNeedToEntangle());
+      console.log("RANDOM BETWEEN " + this.getRandomIntInclusiveExclusive(0, 4));
       console.log("GAME STATE " + this.#gameState);
       console.log("MOVE STATES " + this.#moveStates);
       console.log("BOARD ");
