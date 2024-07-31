@@ -445,6 +445,56 @@ export default class Game {
   }
 
   /**
+   * This function returns an array of a single x and y position if we need to entangle. It returns an empty array otherwise.
+   * @return [x, y] or []
+   */
+  doWeNeedToEntangle() {
+    let returnValue = [];
+    let piecesToBeMeasured = this.findPiecesToMeasure();
+    if (piecesToBeMeasured.length == 0) {
+      return; // if this happens this function should not have been called
+    }
+    if (piecesToBeMeasured[1] == 0 || piecesToBeMeasured[3] == 0) {
+      return; // if this happens we need to prevent index out of bounds
+    }
+
+    let firstX = piecesToBeMeasured[0];
+    let secondX = piecesToBeMeasured[2];
+    let firstY = piecesToBeMeasured[1];
+    let secondY = piecesToBeMeasured[3];
+
+    let firstPiece = this.#board[firstY][firstX];
+    let secondPiece = this.#board[secondY][secondX];
+    let pieceAboveFirst = this.#board[firstY - 1][firstX];
+    let pieceAboveSecond = this.#board[secondY - 1][secondX];
+    let isFirstPieceEntangled =
+      (firstPiece == "YXX" && pieceAboveFirst == "XXP") ||
+      (firstPiece == "XXY" && pieceAboveFirst == "PXX") ||
+      (firstPiece == "PXX" && pieceAboveFirst == "XXY") ||
+      (firstPiece == "XXP" && pieceAboveFirst == "YXX");
+
+    let isSecondPieceEntangled =
+      (secondPiece == "YXX" && pieceAboveFirst == "XXP") ||
+      (secondPiece == "XXY" && pieceAboveSecond == "PXX") ||
+      (secondPiece == "PXX" && pieceAboveSecond == "XXY") ||
+      (secondPiece == "XXP" && pieceAboveSecond == "YXX");
+  
+  if (isFirstPieceEntangled){
+    returnValue.push(firstX);
+    returnValue.push(firstY);
+    return returnValue;
+  }
+  if (isSecondPieceEntangled){
+    returnValue.push(secondX);
+    returnValue.push(secondY);
+    return returnValue;
+
+  }
+
+  return returnValue;
+}
+
+  /**
    * Returns an array containing the ith character of each string
    * @param {string[]} gameStates -> an array of gameStates
    * @returns char[] -> an array containing the ith character of each string;
@@ -699,8 +749,7 @@ export default class Game {
       this.incrementTimeOnBoard();
       this.printTimeOnBoard();
       this.measure();
-      let piecesToBeMeasured = this.findPiecesToMeasure();
-      console.log("PIECES TO BE MEASURED " + piecesToBeMeasured);
+      console.log("ENTANGLEMENT AT " + this.doWeNeedToEntangle());
       console.log("GAME STATE " + this.#gameState);
       console.log("MOVE STATES " + this.#moveStates);
       console.log("BOARD ");
