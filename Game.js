@@ -148,39 +148,19 @@ export default class Game {
       return;
     }
 
-    let firstHalfOfSuperPosition = this.#measuringQueue[0][1];
-    let secondHalfOfSuperPosition = this.#measuringQueue[0][2];
-    let firstX = firstHalfOfSuperPosition[0];
-    let secondX = secondHalfOfSuperPosition[0];
-    let firstY = firstHalfOfSuperPosition[1];
-    let secondY = secondHalfOfSuperPosition[1];
+    /*
 
-    let isFirstHalfEntangled = this.shouldEntangle(firstX, firstY);
-    let isSecondHalfEntangled = this.shouldEntangle(secondX, secondY);
-
-    if (isFirstHalfEntangled) {
-      let entanglementType = this.entangleType(firstX, firstY);
-      console.log(entanglementType);
-      this.#measuringQueue.shift(); // this gets rid of the entry at the top of the measuringQueue
-      this.gameStateToBoard();
-      return; // make function end before moving on to the code below
-    } else if (isSecondHalfEntangled) {
-      let entanglementType = this.entangleType(secondX, secondY);
-      console.log(entanglementType);
-      this.#measuringQueue.shift(); // this gets rid of the entry at the top of the measuringQueue
-      this.gameStateToBoard();
-      return; // make function end before moving on to the code below
+    let newMoveState = "";
+    for (let i = 0; i < this.#moveStates.length; i++) {
+      if (i <= superpositionIndex) {
+        newMoveState = newMoveState.concat("C");
+        continue;
+      }
+      newMoveState = newMoveState.concat(this.#moveStates.charAt(i));
     }
+      */
 
-    this.#gameState = this.#gameState.filter(
-      (game) =>
-        game.charAt(entanglementIndex) == chosenCharacterAtEntanglementIndex
-    );
-
-    this.#gameState = this.#gameState.filter(
-      (game) => game.charAt(superpositionIndex) == choice
-    );
-
+    //this.#moveStates = newMoveState;
     this.#measuringQueue.shift(); // this gets rid of the entry at the top of the measuringQueue
     this.gameStateToBoard();
   }
@@ -189,7 +169,7 @@ export default class Game {
    * Returns true if entanglement should occur, false otherwise
    */
   shouldEntangle(X, Y) {
-    if (Y == 0){
+    if (Y == 0) {
       return;
     }
     let bottomPiece = this.#board[Y][X];
@@ -342,29 +322,9 @@ export default class Game {
         newGameState.push(vectorTwo);
       }
     }
+
     this.#gameState = newGameState;
 
-    // TODO ADD ENTANGLEMENT INTO GAMESTATE
-  }
-
-  /**
-   * This function modifies the current gameState by performing the operators that form our entanglements.  If it is passed "A" it keeps the all or nothing cases
-   * of entanglement. If passed "B" it keeps the other cases.
-   * @param {string} entanglementType -> the case of entanglement, should only be "A" or "B"
-   */
-  entangle(entanglementType) {
-    switch (entanglementType) {
-      case "A":
-        this.#gameState = this.#gameState.filter(
-          (state) => state.charAt(0) == state.charAt(1)
-        ); // This removes all cases that are not all or nothing cases
-        break;
-      case "B":
-        this.#gameState = this.#gameState.filter(
-          (state) => state.charAt(0) != state.charAt(1)
-        ); // This removes all cases that are not all or nothing cases
-        break;
-    }
   }
 
   /**
@@ -628,6 +588,7 @@ export default class Game {
     //Update gameState
     this.#moveStates = this.#moveStates.concat("V");
     this.updateGameState(firstPlacement, column);
+    this.gameStateToBoard();
 
     return "done";
   }
@@ -692,6 +653,7 @@ export default class Game {
 
     this.#moveStates = this.#moveStates.concat("H");
     this.updateGameState(firstPlacement, column);
+    this.gameStateToBoard();
     return "done";
   }
 
@@ -704,6 +666,7 @@ export default class Game {
 
     this.updateGameState(column, column);
     this.#moveStates = this.#moveStates.concat("C");
+    this.gameStateToBoard();
     return "done";
   }
 
@@ -804,8 +767,8 @@ export default class Game {
     );
   }
 
-  printBoard(){
-    for (let i = 0; i < this.#board.length; i++ ){
+  printBoard() {
+    for (let i = 0; i < this.#board.length; i++) {
       console.log(this.#board[i]);
     }
   }
@@ -816,14 +779,16 @@ export default class Game {
     if (this.place() == "done") {
       // Update time on board first because the place functions will set the time on board value for the new piece to 1 and we don't want to accidentally update it to 2
 
-    
-      this.gameStateToBoard();
+      this.printBoard();
       this.incrementMeasurementCounts();
       this.measure();
+      console.log("GAME STATE" + this.#gameState);
+      console.log("MOVE STATES " + this.#moveStates);
 
       this.printQueue();
 
       this.changeTurn();
+    }
       this.#graphics.clearCanvasGrey();
       this.#graphics.drawGridLines();
       this.#graphics.drawPieces(this.#board);
@@ -834,7 +799,7 @@ export default class Game {
         this.#turnInProgress.state
       );
     }
-  }
+  
 
   /**
    * Handles a restart button click
@@ -848,6 +813,7 @@ export default class Game {
     this.#turnInProgress = new TurnInProgress("purple");
     this.#gameState = [];
     this.#moveStates = "";
+    this.#measuringQueue = [];
     this.start();
   }
 }
