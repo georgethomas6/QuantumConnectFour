@@ -53,7 +53,7 @@ export default class Game {
     return this.#gameState;
   }
 
-  get timeOnBoard(){
+  get timeOnBoard() {
     return this.#timeOnBoard;
   }
   /**
@@ -70,7 +70,7 @@ export default class Game {
     this.#board = board;
   }
 
-  set timeOnBoard(newTime){
+  set timeOnBoard(newTime) {
     this.#timeOnBoard = newTime;
   }
 
@@ -114,16 +114,11 @@ export default class Game {
     return newBoard;
   }
 
-
-
   /**
    * This function performs a measurement. It finds the pieces on the board that is about to be measured, and filters
    * the gameState after it measures. If there is entanglement it just selects one of the gameStates.
    */
-  measure() {
-   
-}
-
+  measure() {}
 
   /**
    * Returns an array of the rows at which the pieces will fall
@@ -417,11 +412,12 @@ export default class Game {
   /**
    * This function increments the time spent on the board for all entries not equal to "XXX". Should be called after place occurs.
    */
-  incrementTimeOnBoard(){
-    for (let y = 9; y >= 0; y--){
-      for (let x = 0; x < 7; x++){
-        let isCertain = this.#board[y][x] == "PPP" || this.#board[y][x] == "YYY";
-        if (isCertain){
+  incrementTimeOnBoard() {
+    for (let y = 9; y >= 0; y--) {
+      for (let x = 0; x < 7; x++) {
+        let isCertain =
+          this.#board[y][x] == "PPP" || this.#board[y][x] == "YYY";
+        if (isCertain) {
           this.#timeOnBoard[y][x] = 4;
         } else if (this.#board[y][x] != "XXX") {
           this.#timeOnBoard[y][x]++;
@@ -430,25 +426,43 @@ export default class Game {
     }
   }
 
-    /**
+  /**
+   * This function tries to find pieces who need to be measured. It returns an empty array if no pieces need to be measured.
+   * @returns [x1, y1, x2, y2] or []
+   */
+  findPiecesToMeasure() {
+    let returnValue = [];
+    for (let y = 9; y >= 0; y--) {
+      for (let x = 0; x < 7; x++) {
+        let pieceNeedsToBeMeasured = this.#timeOnBoard[y][x] == 3;
+        if (pieceNeedsToBeMeasured) {
+          returnValue.push(x);
+          returnValue.push(y);
+        }
+      }
+    }
+    return returnValue;
+  }
+
+  /**
    * Returns an array containing the ith character of each string
    * @param {string[]} gameStates -> an array of gameStates
    * @returns char[] -> an array containing the ith character of each string;
    */
-    getIthCharacter(gameStates, i) {
-      // Use a Set to store unique characters
-      const uniqueChars = new Set();
-  
-      // Iterate over each string and add the character at the given index to the Set
-      gameStates.forEach((str) => {
-        if (str.length > i) {
-          uniqueChars.add(str.charAt(i));
-        }
-      });
-  
-      // Convert the Set to an array and return it
-      return Array.from(uniqueChars);
-    }
+  getIthCharacter(gameStates, i) {
+    // Use a Set to store unique characters
+    const uniqueChars = new Set();
+
+    // Iterate over each string and add the character at the given index to the Set
+    gameStates.forEach((str) => {
+      if (str.length > i) {
+        uniqueChars.add(str.charAt(i));
+      }
+    });
+
+    // Convert the Set to an array and return it
+    return Array.from(uniqueChars);
+  }
 
   /**
    * First this function checks to see if the placement is valid. If the placement was valid it places a piece in the correct state on the board
@@ -669,12 +683,12 @@ export default class Game {
     }
   }
 
-  printTimeOnBoard(){
+  printTimeOnBoard() {
     for (let i = 0; i < this.#board.length; i++) {
       console.log(this.#timeOnBoard[i]);
     }
   }
-  
+
   /**
    * Handles a place button click
    */
@@ -682,10 +696,11 @@ export default class Game {
     if (this.place() == "done") {
       // Update time on board first because the place functions will set the time on board value for the new piece to 1 and we don't want to accidentally update it to 2
 
-
       this.incrementTimeOnBoard();
       this.printTimeOnBoard();
       this.measure();
+      let piecesToBeMeasured = this.findPiecesToMeasure();
+      console.log("PIECES TO BE MEASURED " + piecesToBeMeasured);
       console.log("GAME STATE " + this.#gameState);
       console.log("MOVE STATES " + this.#moveStates);
       console.log("BOARD ");
