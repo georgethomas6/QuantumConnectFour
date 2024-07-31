@@ -118,16 +118,18 @@ export default class Game {
    * Returns the position of entangled pieces in an array.
    * @return [x1, y1, x2, y2, x3, y3, x4, y4]
    */
-  entanglementIsHappeningHere(){
+  entanglementIsHappeningHere() {
     let returnValue = [];
     let piecesToBeMeasured = this.findPiecesToMeasure(); // FIND PIECES TO BE MEASURED
-    let entanglementOccuring = this.doWeNeedToEntangle(); // FIND FIRST INSTANCE OF ENTANGLEMENT TO FIND TARGETS 
+    let entanglementOccuring = this.doWeNeedToEntangle(); // FIND FIRST INSTANCE OF ENTANGLEMENT TO FIND TARGETS
     let firstPieceToLookForX = entanglementOccuring[0];
     let firstPieceToLookForY = entanglementOccuring[1];
     let secondPieceToLookForX = entanglementOccuring[0];
     let secondPieceToLookForY = firstPieceToLookForY - 1;
-    let firstPieceToLookFor = this.#board[firstPieceToLookForY][firstPieceToLookForX]; // SAVE TARGET 1
-    let secondPieceToLookFor = this.#board[secondPieceToLookForY][secondPieceToLookForX]; // SAVE TARGET 2
+    let firstPieceToLookFor =
+      this.#board[firstPieceToLookForY][firstPieceToLookForX]; // SAVE TARGET 1
+    let secondPieceToLookFor =
+      this.#board[secondPieceToLookForY][secondPieceToLookForX]; // SAVE TARGET 2
 
     // ENTANGLEMENT IS OCCURINIG HERE SO PUSH THESE PIECES TO RETURN VALUE
     returnValue.push(firstPieceToLookForX);
@@ -136,11 +138,14 @@ export default class Game {
     returnValue.push(secondPieceToLookForY);
 
     // NOW WE NEED TO FIND THE LOWEST PIECES THAT MATCH THEIR STRING ON THE BOARD NOT IN THE SAME COLUMN
-    for (let y = 9; y > 0; y--){
-      for (let x = 0; x < 7; x++){
-        if (x == firstPieceToLookForX){
+    for (let y = 9; y > 0; y--) {
+      for (let x = 0; x < 7; x++) {
+        if (x == firstPieceToLookForX) {
           continue; // WE DO NOT WANT TO SEARCH THE COLUMN WE ALREADY KNOW ENTANGLEMENT IS HAPPENING IN
-        } else if (this.#board[y][x] == firstPieceToLookFor || this.#board[y][x] == secondPieceToLookFor){
+        } else if (
+          this.#board[y][x] == firstPieceToLookFor ||
+          this.#board[y][x] == secondPieceToLookFor
+        ) {
           returnValue.push(x);
           returnValue.push(y);
         }
@@ -148,7 +153,34 @@ export default class Game {
     }
 
     return returnValue;
+  }
 
+  /**
+   * This function finds the current time of the piece that is not involved in the entanglment. It requires the position of every piece involved in the superposition.
+   * @returns number between 1-3 or 0
+   */
+  findTimeOfNonEntangledPiece(x1, y1, x2, y2, x3, y3, x4, y4) {
+    for (let y = 9; y > 0; y--) {
+      for (let x = 0; x < 7; x++) {
+        let positionIsInvolvedInEntanglement =
+          (x == x1 && y == y1) ||
+          (x == x2 && y == y2) ||
+          (x == x3 && y == y3) ||
+          (x == x4 && y == y4);
+        if (positionIsInvolvedInEntanglement) {
+          continue; // WE DONT WANT THE TIME OF ANYONE WHO IS ENTANGLED
+        }
+        let positionIsInSuperPosition = 
+        this.#board[y][x] != "XXX" &&
+        this.#board[y][x] != "PPP" &&
+        this.#board[y][x] != "YYY";
+        if (positionIsInSuperPosition){
+          return this.#timeOnBoard[y][x];
+        }
+      }
+    }
+
+    return 0;
   }
   /**
    * This function performs a measurement. It finds the pieces on the board that is about to be measured, and filters
@@ -156,13 +188,28 @@ export default class Game {
    */
   measure() {
     let piecesToBeMeasured = this.findPiecesToMeasure();
-    if (piecesToBeMeasured.length == 0){
+    if (piecesToBeMeasured.length == 0) {
       return; // If there is nothing to measure return.
     }
 
     let isEntanglementOccuring = this.doWeNeedToEntangle();
-    if (isEntanglementOccuring.length != 0){
-      console.log("ENTANGLEMENT IS OCCURING IN THESE PIECES  " + this.entanglementIsHappeningHere());
+    if (isEntanglementOccuring.length != 0) {
+      let entanglementIsHappeningHere = this.entanglementIsHappeningHere();
+      console.log(
+        "ENTANGLEMENT IS OCCURING IN THESE PIECES  " +
+          this.entanglementIsHappeningHere()
+      );
+      // ARGUEMENTS TO PASS TO findTimeOfNonEntangledPiece;
+      let x1 = entanglementIsHappeningHere[0];
+      let y1 = entanglementIsHappeningHere[1];
+      let x2 = entanglementIsHappeningHere[2]; 
+      let y2 = entanglementIsHappeningHere[3]; 
+      let x3 = entanglementIsHappeningHere[4]; 
+      let y3 = entanglementIsHappeningHere[5]; 
+      let x4 = entanglementIsHappeningHere[6];
+      let y4 = entanglementIsHappeningHere[7];
+      let findTimeOfNonEntangledPiece = this.findTimeOfNonEntangledPiece();
+      console.log("TIME OF NON ENTANGLED PIECE " + this.findTimeOfNonEntangledPiece(x1, y1, x2, y2, x3, y3, x4, y4));
     }
   }
 
@@ -476,7 +523,7 @@ export default class Game {
     // Ensure min and max are integers
     min = Math.ceil(min);
     max = Math.floor(max);
-  
+
     // Generate a random integer between min (inclusive) and max (exclusive)
     return Math.floor(Math.random() * (max - min)) + min;
   }
@@ -533,20 +580,20 @@ export default class Game {
       (secondPiece == "XXY" && pieceAboveSecond == "PXX") ||
       (secondPiece == "PXX" && pieceAboveSecond == "XXY") ||
       (secondPiece == "XXP" && pieceAboveSecond == "YXX");
-  
-  if (isFirstPieceEntangled){
-    returnValue.push(firstX);
-    returnValue.push(firstY);
-    return returnValue;
-  }
-  if (isSecondPieceEntangled){
-    returnValue.push(secondX);
-    returnValue.push(secondY);
-    return returnValue;
-  }
 
-  return returnValue;
-}
+    if (isFirstPieceEntangled) {
+      returnValue.push(firstX);
+      returnValue.push(firstY);
+      return returnValue;
+    }
+    if (isSecondPieceEntangled) {
+      returnValue.push(secondX);
+      returnValue.push(secondY);
+      return returnValue;
+    }
+
+    return returnValue;
+  }
 
   /**
    * Returns an array containing the ith character of each string
@@ -803,7 +850,9 @@ export default class Game {
       this.incrementTimeOnBoard();
       this.printTimeOnBoard();
       this.measure();
-      console.log("RANDOM BETWEEN " + this.getRandomIntInclusiveExclusive(0, 4));
+      console.log(
+        "RANDOM BETWEEN " + this.getRandomIntInclusiveExclusive(0, 4)
+      );
       console.log("GAME STATE " + this.#gameState);
       console.log("MOVE STATES " + this.#moveStates);
       console.log("BOARD ");
