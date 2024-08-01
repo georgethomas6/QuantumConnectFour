@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -38,7 +39,7 @@
             padding: 10px;
             background-color: #fff;
             border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(88, 44, 131, 0.3);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             margin-bottom: 10px;
         }
         .image-container {
@@ -67,6 +68,7 @@
             border-radius: 10px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+
         .button-container {
             text-align: center;
             margin: 20px 0;
@@ -106,13 +108,11 @@
             text-align: right;
             margin-right: 20px;
         }
+
     </style>
 </head>
 <body>
     <h1>Quantum Connect Four</h1>
-    <div class="button-left">
-        <button id="back" class="small-button" type="button">Back</button>
-    </div>
     <h2>Rules of the Game</h2>
     <p>1. Each player can play a classic piece (default) or make a quantum move (by pressing “state”) in different states (by pressing “state” again).</p>
     <p>2. A quantum move will be like playing a move in two different columns without knowing which column it is actually in until three moves later.</p>
@@ -120,26 +120,23 @@
     <p>4. If a quantum move is played on top of the opposing player’s quantum move in a different state, those moves will become entangled.</p>
     <p>5. You cannot entangle moves with yourself.</p>
     <p>6. A horizontal move on top of a vertical move guarantees one move to be measured in that column and the other will automatically go to its paired move as demonstrated below.</p>
-    <h3>6. Merged Entanglement</h3>
+    <h3>6. Merged Entaglement</h3>
     <div class="image-row">
-        <img src="images/mergedEntaglement.jpg" alt="Column 4 is guaranteed to be measured as purple or yellow, but not both.">
+        <img src="images/mergedEntaglement.jpg" alt="Column 4 is guranteed to be measured as purple or yellow, but not both.">
         <img src="images/purpleMeasured.jpg" alt="Here, purple is measured to be in Column 4">
         <img src="images/yellowMeasured.jpg" alt="Here, yellow is measured to be in Column 4">
+
     </div>
     <p>7. A vertical move on top of a horizontal move means that either both pieces will be measured in that column or neither will as demonstrated below.</p>
     <h3>7. All or Nothing Entanglement</h3>
     <div class="image-container">
         <img src="images/allOrNothing.jpg" alt="Column 4 will either contain both pieces or neither of the pieces">
         <img src="images/allCase.jpg" alt="The result for both pieces measured in the same column.">
-        <img src="images/nothingCase.jpg" alt="The result for neither piece being measured in the middle column">
+        <img src="images/nothingCase.jpg" alt="The result for neither piece being measurd in the middle column">
     </div>
     <a href="#">Jump to Top</a>
-
-    <script>
-        document.getElementById("back").addEventListener("click", function() {
-            window.location.href = "index.html";
-        });
-    </script>
 </body>
 </html>
+
+
 
