@@ -1,13 +1,25 @@
-
 export default class Graphics {
   #canvas;
   #ctx;
-  #cellWidth = 640 / 9;
-  #cellHeight = 640 / 12;
-
+  #height;
+  #width;
+  #cellWidth;
+  #cellHeight;
   constructor() {
     this.#canvas = document.getElementById("myCanvas");
+    this.#height = this.#canvas.height;
+    this.#width = this.#canvas.width;
     this.#ctx = this.#canvas.getContext("2d");
+    this.#cellWidth = this.#width / 9; // 9 is the number of columns + 2 for padding 
+    this.#cellHeight = this.#height / 10; // 10 is the number of rows + 2 for padding
+  }
+
+  get cellHeight() {
+    return this.#cellHeight;
+  }
+
+  get cellWidth() {
+    return this.#cellWidth;
   }
 
   /**
@@ -23,12 +35,12 @@ export default class Graphics {
    * Draws the rows in the board
    */
   drawRows() {
-    //9 is the number of columns
+
     const startWidth = this.#cellWidth;
-    const endWidth = this.#cellWidth * 8;
+    const endWidth = this.#cellWidth * 8; // stop at 8 for padding
     //draw rows
-    for (let i = 5; i < 12; i++) {
-      const lineY = (640 / 12) * i;
+    for (let i = 3; i <= 9; i++) { // stop at 9 for padding
+      const lineY = this.#cellHeight * i;
       this.#ctx.beginPath();
       this.#ctx.lineWidth = 4;
       this.#ctx.moveTo(startWidth, lineY);
@@ -42,13 +54,13 @@ export default class Graphics {
    * Draws the columns in the board
    */
   drawColumns() {
-    //12 is the number of rows
-    const startHeight = this.#cellHeight * 5;
-    const endHeight = 640 - this.#cellHeight;
+    //9 is the number of rows
+    const startHeight = this.#cellHeight * 3; // want to start at cellHeight * 3 because we don't want to draw the phantom rows
+    const endHeight = this.#cellHeight * 9; // stop at 9 for padding
 
     //draw cols
     for (let i = 1; i < 9; i++) {
-      const lineX = (640 / 9) * i;
+      const lineX = this.#cellWidth * i;
       this.#ctx.beginPath();
       this.#ctx.lineWidth = 4;
       this.#ctx.moveTo(lineX, startHeight);
@@ -73,7 +85,7 @@ export default class Graphics {
    * @param {string} fillColor -> color of piece, should be only "purple" or "yellow"
    */
   drawPiece(xCoord, yCoord, fillColor) {
-    const radius = 640 / 30;
+    const radius = this.#height / 30; // 30 is arbitrary just magic
     //change the fill and stroke colors
     this.#ctx.fillStyle = fillColor;
     this.#ctx.strokeStyle = fillColor;
@@ -97,8 +109,8 @@ export default class Graphics {
    */
   drawVerticalStatePiece(xCoord, yCoord, fillColor) {
     //Highest and lowest points on the circle
-    const topY = yCoord - 640 / 30 - 2;
-    const bottomY = yCoord + 640 / 30 + 2;
+    const topY = yCoord - this.#height / 30 - 2;  // 2 is just magic
+    const bottomY = yCoord + this.#height / 30 + 2; 
     //draw a piece as normal
     this.drawPiece(xCoord, yCoord, fillColor);
 
@@ -118,8 +130,8 @@ export default class Graphics {
    */
   drawHorizontalStatePiece(xCoord, yCoord, fillColor) {
     //left most and right most points on the circle
-    const leftX = xCoord - 640 / 30 - 2;
-    const rigthX = xCoord + 640 / 30 + 2;
+    const leftX = xCoord - this.#height / 30 - 2; // 2 is just magic 
+    const rigthX = xCoord + this.#height / 30 + 2; 
 
     //draw a piece as normal
     this.drawPiece(xCoord, yCoord, fillColor);

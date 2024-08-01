@@ -18,7 +18,7 @@ export default class Game {
   constructor() {
     //initalize blank board
     this.#board = [];
-    for (let y = 0; y < 10; y++) {
+    for (let y = 0; y < 8; y++) {
       let row = ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"];
       this.#board.push(row);
     }
@@ -120,7 +120,7 @@ export default class Game {
     returnValue.push(secondPieceToLookForY);
 
     // NOW WE NEED TO FIND THE LOWEST PIECES THAT MATCH THEIR STRING ON THE BOARD NOT IN THE SAME COLUMN
-    for (let y = 9; y > 0; y--) {
+    for (let y = 7; y > 0; y--) {
       for (let x = 0; x < 7; x++) {
         if (x == firstPieceToLookForX) {
           continue; // WE DO NOT WANT TO SEARCH THE COLUMN WE ALREADY KNOW ENTANGLEMENT IS HAPPENING IN
@@ -143,7 +143,7 @@ export default class Game {
    * @param {int} -> row first height in the entanglement
    */
   findEntanglementType(column, row) {
-    if (row == 9) {
+    if (row == 7) {
       return; // AVOID INDEX OUT OF BOUNDS
     }
     let topPiece = this.#board[row][column];
@@ -426,7 +426,7 @@ export default class Game {
    * @returns true if there are no uncertain pieces in the given column, false otherwise
    */
   noProppedPiece(column, row) {
-    while (row < 10) {
+    while (row < 8) {
       let isCertain =
         this.#board[row][column] == "PPP" || this.#board[row][column] == "YYY";
       if (!isCertain) {
@@ -442,7 +442,7 @@ export default class Game {
    * @returns "PPP" if there is a purple group, "YYY" if there is a yellow group, and "XXX" if there is not a group
    */
   checkColumns() {
-    for (let y = 9; y > 6; y--) {
+    for (let y = 7; y > 4; y--) {
       for (let x = 0; x < 7; x++) {
         let state = this.#board[y][x];
         let itsCertain = state == "PPP" || state == "YYY";
@@ -463,7 +463,7 @@ export default class Game {
    * @returns "PPP" if there is a purple group, "YYY" if there is a yellow group, and "XXX" if there is not a group
    */
   checkRows() {
-    for (let y = 9; y > 3; y--) {
+    for (let y = 7; y > 1; y--) {
       for (let x = 0; x < 4; x++) {
         let state = this.#board[y][x];
         let itsCertain = state == "PPP" || state == "YYY";
@@ -489,7 +489,7 @@ export default class Game {
    * @returns "PPP" if there is a purple group, "YYY" if there is a yellow group, and "XXX" if there is not a group
    */
   checkAscendingDiagonals() {
-    for (let y = 9; y > 6; y--) {
+    for (let y = 7; y > 4; y--) {
       for (let x = 0; x < 4; x++) {
         let state = this.#board[y][x];
         let itsCertain = state == "PPP" || state == "YYY";
@@ -515,7 +515,7 @@ export default class Game {
    * @returns "PPP" if there is a purple group, "YYY" if there is a yellow group, and "XXX" if there is not a group
    */
   checkDescendingDiagonals() {
-    for (let y = 4; y < 7; y++) {
+    for (let y = 2; y < 5; y++) {
       for (let x = 0; x < 4; x++) {
         let state = this.#board[y][x];
         let itsCertain = state == "PPP" || state == "YYY";
@@ -559,7 +559,7 @@ export default class Game {
    */
   isGameDrawn() {
     let count = 0;
-    for (let y = 9; y > 3; y--) {
+    for (let y = 7; y > 1; y--) {
       for (let x = 0; x < 7; x++) {
         if (this.#board[y][x] != "XXX") {
           count++;
@@ -616,7 +616,7 @@ export default class Game {
    * Returns row of first occurance of target. Returns -1 if not found
    */
   findInColumn(target, column) {
-    for (let y = 9; y > 0; y--) {
+    for (let y = 7; y > 0; y--) {
       let foundTarget = this.#board[y][column] == target;
       if (foundTarget) {
         return y;
@@ -682,7 +682,7 @@ export default class Game {
    * Is entanglement occuring
    */
   isEntanglementOccuring() {
-    for (let y = 9; y > 1; y--) {
+    for (let y = 7; y > 1; y--) {
       for (let x = 0; x < 7; x++) {
         let isEntangled =
           (this.#board[y][x] == "PXX" && this.#board[y - 1][x] == "XXY") ||
@@ -711,7 +711,7 @@ export default class Game {
     // CHECK TO MAKE SURE WE DON'T GO TO INDEX OUT OF BOUNDS
 
     // CHECK FOR DOUBLE ENTANGLEMENT. THIS CHECK IS OK BECAUSE WE ONLY EVER HAVE THREE QUANTUM PIECES ON THE BOARD AT A TIME
-    if (firstY < 8) {
+    if (firstY < 7) {
       let pieceBelowFirst = this.#board[firstY + 1][firstX];
       let secondPieceBelowFirst = this.#board[firstY + 2][firstX];
       let piecesBelowAlreadyEntangled =
@@ -724,7 +724,7 @@ export default class Game {
       }
     }
 
-    if (secondY < 8) {
+    if (secondY < 7) {
       let pieceBelowFirst = this.#board[secondY + 1][secondX];
       let secondPieceBelowFirst = this.#board[secondY + 2][secondX];
       let piecesBelowAlreadyEntangled =
@@ -737,7 +737,7 @@ export default class Game {
       }
     }
 
-    if (firstY < 9) {
+    if (firstY < 7) {
       let firstPiece = this.#board[firstY][firstX];
       let pieceBelowFirst = this.#board[firstY + 1][firstX];
       let isFirstPieceEntangled =
@@ -751,7 +751,7 @@ export default class Game {
         return returnValue;
       }
     }
-    if (secondY < 9) {
+    if (secondY < 7) {
       let secondPiece = this.#board[secondY][secondX];
       let pieceBelowSecond = this.#board[secondY + 1][secondX];
       let isSecondPieceEntangled =
@@ -798,13 +798,13 @@ export default class Game {
     let row = this.firstOpenRow(this.#board, column);
     let state = this.#turnInProgress.state;
     let firstPlacement = this.#turnInProgress.firstPlacement;
-    let validClassicMove = state == "certain" && row >= 4;
+    let validClassicMove = state == "certain" && row >= 2;
     let validQuantumMove =
       state != "certain" &&
       row >= 2 &&
       firstPlacement != column &&
-      this.#board[4][column] != "PPP" &&
-      this.#board[4][column] != "YYY";
+      this.#board[2][column] != "PPP" &&
+      this.#board[2][column] != "YYY";
     let isValid = validClassicMove || validQuantumMove;
     if (isValid) {
       if (state == "certain") {
@@ -915,7 +915,7 @@ export default class Game {
    */
   turnInProgressDepth(column) {
     let firstOpenRow = this.firstOpenRow(this.#board, column);
-    let depth = firstOpenRow >= 4 ? 3 : firstOpenRow;
+    let depth = firstOpenRow >= 2 ? 1 : firstOpenRow;
     return depth;
   }
 
@@ -927,7 +927,7 @@ export default class Game {
    */
   firstOpenRow(board, column) {
     let depth = -1;
-    for (let y = 0; y < 10; y++) {
+    for (let y = 0; y < 8; y++) {
       let spotIsEmpty = board[y][column] == "XXX";
       if (spotIsEmpty) {
         depth++;
@@ -1046,7 +1046,7 @@ export default class Game {
    */
   reactToRestartButton() {
     this.#board = [];
-    for (let y = 0; y < 10; y++) {
+    for (let y = 0; y < 8; y++) {
       let row = ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"];
       this.#board.push(row);
     }
