@@ -1,10 +1,7 @@
 // Game.js
 
-//TODO KNOW BUGS
-//TODO ABOVE THE BOARD BUG 3.
-//TODO ENTANGLEMENT BUG 1. INCLUDES DRAWING ENTANGLEMENT BUG
-//TODO IMPLEMENT WIN LOSS 2.
-// TODO WALK THROUGH CODE AND CLEAN SLASH CREATE MAP AND COMMENT 4.
+
+// fix turn in progress just jumping
 
 import TurnInProgress from "./TurnInProgress.js";
 import Graphics from "./Graphics.js";
@@ -959,6 +956,9 @@ export default class Game {
    */
   reactToRightButton() {
     this.#turnInProgress.incrementPosition();
+    if (this.#turnInProgress.column == this.#turnInProgress.firstPlacement){
+      this.#turnInProgress.incrementPosition();
+    }
     this.#graphics.clearCanvasGrey();
     this.#graphics.drawGridLines();
     this.#graphics.drawPieces(this.#board);
@@ -975,6 +975,9 @@ export default class Game {
    */
   reactToLeftButton() {
     this.#turnInProgress.decrementPosition();
+    if (this.#turnInProgress.column == this.#turnInProgress.firstPlacement){
+      this.#turnInProgress.decrementPosition();
+    }
     this.#graphics.clearCanvasGrey();
     this.#graphics.drawGridLines();
     this.#graphics.drawPieces(this.#board);
