@@ -13,7 +13,6 @@ export default class Game {
   #board; // A 10 x 7 array of strings, each representing a cell in the board
   #turnInProgress; // the move that is in the process of being made
   #gameState;
-  #timeOnBoard; // A 10 X 7 board that keeps track of the amount of time a moved has been in a position
   #moveStates; // this is a string of the type of moves that have been played, consists of V, C, H
   #graphics;
   constructor() {
@@ -26,7 +25,6 @@ export default class Game {
     this.#turnInProgress = new TurnInProgress("purple");
     this.#graphics = new Graphics();
     this.#gameState = []; // this will be an array of strings
-    this.#timeOnBoard = this.initNewTimeOnBoard();
     this.#moveStates = "";
   }
 
@@ -53,9 +51,7 @@ export default class Game {
     return this.#gameState;
   }
 
-  get timeOnBoard() {
-    return this.#timeOnBoard;
-  }
+
   /**
    * @returns string
    */
@@ -68,10 +64,6 @@ export default class Game {
    */
   set board(board) {
     this.#board = board;
-  }
-
-  set timeOnBoard(newTime) {
-    this.#timeOnBoard = newTime;
   }
 
   /**
@@ -91,17 +83,6 @@ export default class Game {
   }
 
   // GAME FUNCTIONS
-
-  /**
-   * Returns a 7 x 10 array of all zeros
-   */
-  initNewTimeOnBoard() {
-    let newTimeOnBoard = [];
-    for (let i = 0; i < 10; i++) {
-      newTimeOnBoard.push([0, 0, 0, 0, 0, 0, 0]);
-    }
-    return newTimeOnBoard;
-  }
 
   /**
    * Returns a 7 x 10 array of all "XXX"
@@ -155,66 +136,6 @@ export default class Game {
     }
 
     return returnValue;
-  }
-
-  /**
-   * This function finds the current time of the piece that is not involved in the entanglment. It requires the position of every piece involved in the superposition.
-   * @returns number between 1-3 or 0
-   */
-  findTimeOfNonEntangledPiece(x1, y1, x2, y2, x3, y3, x4, y4) {
-    for (let y = 9; y > 0; y--) {
-      for (let x = 0; x < 7; x++) {
-        let positionIsInvolvedInEntanglement =
-          (x == x1 && y == y1) ||
-          (x == x2 && y == y2) ||
-          (x == x3 && y == y3) ||
-          (x == x4 && y == y4);
-        if (positionIsInvolvedInEntanglement) {
-          continue; // WE DONT WANT THE TIME OF ANYONE WHO IS ENTANGLED
-        }
-        let positionIsInSuperPosition =
-          this.#board[y][x] != "XXX" &&
-          this.#board[y][x] != "PPP" &&
-          this.#board[y][x] != "YYY";
-        if (positionIsInSuperPosition) {
-          return this.#timeOnBoard[y][x];
-        }
-      }
-    }
-
-    return 0;
-  }
-
-  /**
-   * This function handles adjusting the time on the board after an entanglement is measured. the board needs to be updated before this function is called
-   * @param {int} timeofUnentangled -> the time the unentangled superposition has been on the board
-   */
-  updateTimeOnBoardAfterEntangledMeasurement(indexOfMeasuredMove) {
-    let newTimeOnBoard = this.initNewTimeOnBoard();
-    for (let y = 9; y >= 0; y--) {
-      for (let x = 0; x < 7; x++) {
-        let isCertain =
-          this.#board[y][x] == "PPP" || this.#board[y][x] == "YYY";
-        if (isCertain) {
-          newTimeOnBoard[y][x] = 4;
-        } else if (this.#board[y][x] == "XXX") {
-          continue;
-        } else {
-          let inVerticalState =
-            this.#board[y][x] == "XXP" || this.#board[y][x] == "XXY";
-          let inHorizontalState =
-            this.#board[y][x] == "PXX" || this.#board[y][x] == "YXX";
-          if (inVerticalState) {
-            let time = this.#moveStates.indexOf("V") - indexOfMeasuredMove;
-            newTimeOnBoard[y][x] = time;
-          } else if (inHorizontalState) {
-            let time = this.#moveStates.indexOf("H") - indexOfMeasuredMove;
-            newTimeOnBoard[y][x] = time;
-          }
-        }
-      }
-    }
-    this.#timeOnBoard = newTimeOnBoard;
   }
 
   /**
@@ -659,23 +580,6 @@ export default class Game {
     }
   }
 
-  /**
-   * This function increments the time spent on the board for all entries not equal to "XXX". Should be called after place occurs.
-   */
-  incrementTimeOnBoard() {
-    for (let y = 9; y >= 0; y--) {
-      for (let x = 0; x < 7; x++) {
-        let isCertain =
-          this.#board[y][x] == "PPP" || this.#board[y][x] == "YYY";
-        if (isCertain) {
-          this.#timeOnBoard[y][x] = 4;
-        } else if (this.#board[y][x] != "XXX") {
-          this.#timeOnBoard[y][x]++;
-        }
-      }
-    }
-  }
-
   getRandomIntInclusiveExclusive(min, max) {
     // Ensure min and max are integers
     min = Math.ceil(min);
@@ -1070,12 +974,6 @@ export default class Game {
     }
   }
 
-  printTimeOnBoard() {
-    for (let i = 0; i < this.#board.length; i++) {
-      console.log(this.#timeOnBoard[i]);
-    }
-  }
-
   /**
    * Handles a place button click
    */
@@ -1117,7 +1015,6 @@ export default class Game {
     this.#turnInProgress = new TurnInProgress("purple");
     this.#gameState = [];
     this.#moveStates = "";
-    this.#timeOnBoard = this.initNewTimeOnBoard();
     this.start();
   }
 }
