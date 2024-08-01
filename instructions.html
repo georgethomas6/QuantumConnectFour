@@ -1,41 +1,3 @@
-<!-- <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="keywords" content="Quantum, Connect Four">
-    <meta name="description" content="...">
-    <title>Quantum Conncect Four</title>
-    <style>
-        img {
-            width: 400px;
-            height: 400px;
-            object-fit: cover;
-        }
-    </style>
-</head>
-<body>
-    <h1>Quantum Connect Four</h1>
-    <h2>Rules of the Game</h2>
-    <p>1. Each player can play a classic piece (default) or make a quantum move (by pressing “state”)
-         in different states (by pressing “state” again)</p>
-    <p>2. A quantum move will be like playing a move in two different columns without
-         knowing which column it is actually in until three moves later.</p>
-    <p>3. Quantum moves can be played on top of each other but interesting things may happen.</p>
-    <p>4. If a quantum move is played on top of the opposing player’s 
-        quantum move in a different state, those moves will become entangled. </p>
-    <p>5. A horizontal move on top of a vertical move guarantees one move to be measured in that column and 
-        the other will automatically go to its paired move.</p>
-    <p>6. A vertical move on top of a horizontal move means that 
-        either both pieces will be measured in that column or neither will. </p>
-        <h3>All or Nothing Entaglement</h3>
-    <img src="images/allOrNothing.jpg" alt="In this example column 4 will either contain both pieces or neither of the pieces">
-    <p>7. You can not entangle moves with yourself.</p>
-
-    </body>
-</html> -->
-
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -76,7 +38,7 @@
             padding: 10px;
             background-color: #fff;
             border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(88, 44, 131, 0.3);
             margin-bottom: 10px;
         }
         .image-container {
@@ -105,10 +67,52 @@
             border-radius: 10px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+        .button-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .button-container button {
+            padding: 15px 30px;
+            font-size: 1.2em;
+            margin: 10px;
+            border-radius: 10px;
+            background-color: #582C83; /* Match background color */
+            color: white;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .button-container button:hover {
+            background-color: #4a1b67; /* Darker shade on hover */
+        }
+        .small-button {
+            padding: 10px 20px;
+            font-size: 1em;
+            border-radius: 10px;
+            background-color: #582C83; /* Match background color */
+            color: white;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .small-button:hover {
+            background-color: #4a1b67; /* Darker shade on hover */
+        }
+        .button-left {
+            text-align: left;
+            margin-left: 20px;
+        }
+        .button-right {
+            text-align: right;
+            margin-right: 20px;
+        }
     </style>
 </head>
 <body>
     <h1>Quantum Connect Four</h1>
+    <div class="button-left">
+        <button id="back" class="small-button" type="button">Back</button>
+    </div>
     <h2>Rules of the Game</h2>
     <p>1. Each player can play a classic piece (default) or make a quantum move (by pressing “state”) in different states (by pressing “state” again).</p>
     <p>2. A quantum move will be like playing a move in two different columns without knowing which column it is actually in until three moves later.</p>
@@ -116,128 +120,26 @@
     <p>4. If a quantum move is played on top of the opposing player’s quantum move in a different state, those moves will become entangled.</p>
     <p>5. You cannot entangle moves with yourself.</p>
     <p>6. A horizontal move on top of a vertical move guarantees one move to be measured in that column and the other will automatically go to its paired move as demonstrated below.</p>
-    <h3>6. Merged Entaglement</h3>
+    <h3>6. Merged Entanglement</h3>
     <div class="image-row">
-        <img src="images/mergedEntaglement.jpg" alt="Column 4 is guranteed to be measured as purple or yellow, but not both.">
+        <img src="images/mergedEntaglement.jpg" alt="Column 4 is guaranteed to be measured as purple or yellow, but not both.">
         <img src="images/purpleMeasured.jpg" alt="Here, purple is measured to be in Column 4">
         <img src="images/yellowMeasured.jpg" alt="Here, yellow is measured to be in Column 4">
-
     </div>
     <p>7. A vertical move on top of a horizontal move means that either both pieces will be measured in that column or neither will as demonstrated below.</p>
     <h3>7. All or Nothing Entanglement</h3>
     <div class="image-container">
         <img src="images/allOrNothing.jpg" alt="Column 4 will either contain both pieces or neither of the pieces">
         <img src="images/allCase.jpg" alt="The result for both pieces measured in the same column.">
-        <img src="images/nothingCase.jpg" alt="The result for neither piece being measurd in the middle column">
+        <img src="images/nothingCase.jpg" alt="The result for neither piece being measured in the middle column">
     </div>
     <a href="#">Jump to Top</a>
+
+    <script>
+        document.getElementById("back").addEventListener("click", function() {
+            window.location.href = "index.html";
+        });
+    </script>
 </body>
 </html>
 
-
-<!-- <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="keywords" content="Quantum, Connect Four">
-    <meta name="description" content="...">
-    <title>Quantum Connect Four</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 0;
-            background-color: #f9f9f9;
-            color: #333;
-        }
-        h1, h2, h3 {
-            text-align: center;
-            color: #2c3e50;
-        }
-        h1 {
-            margin-top: 20px;
-            font-size: 2.5em;
-        }
-        h2 {
-            margin-top: 10px;
-            font-size: 2em;
-        }
-        h3 {
-            margin-top: 20px;
-            font-size: 1.5em;
-        }
-        .rule {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 10px;
-            background-color: #fff;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 10px;
-            cursor: pointer;
-        }
-        .image-container {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin: 20px 0;
-            display: none; /* Hidden by default */
-        }
-        .image-container img {
-            width: 30%;
-            height: auto;
-            margin: 0 10px;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-    </style>
-</head>
-<body>
-    <h1>Quantum Connect Four</h1>
-    <h2>Rules of the Game</h2>
-    <div class="rule">
-        <p>1. Each player can play a classic piece (default) or make a quantum move (by pressing “state”) in different states (by pressing “state” again).</p>
-    </div>
-    <div class="rule">
-        <p>2. A quantum move will be like playing a move in two different columns without knowing which column it is actually in until three moves later.</p>
-    </div>
-    <div class="rule">
-        <p>3. Quantum moves can be played on top of each other but interesting things may happen.</p>
-    </div>
-    <div class="rule">
-        <p>4. If a quantum move is played on top of the opposing player’s quantum move in a different state, those moves will become entangled.</p>
-    </div>
-    <div class="rule">
-        <p>5. You cannot entangle moves with yourself.</p>
-    </div>
-    <div class="rule" onclick="toggleImages('images6')">
-        <p>6. A horizontal move on top of a vertical move guarantees one move to be measured in that column and the other will automatically go to its paired move as demonstrated below.</p>
-        <div id="images6" class="image-container">
-            <img src="images/mergedEntanglement.jpg" alt="Column 4 is guaranteed to be measured as purple or yellow, but not both.">
-            <img src="images/purpleMeasured.jpg" alt="Here, purple is measured to be in Column 4">
-            <img src="images/yellowMeasured.jpg" alt="Here, yellow is measured to be in Column 4">
-        </div>
-    </div>
-    <div class="rule" onclick="toggleImages('images7')">
-        <p>7. A vertical move on top of a horizontal move means that either both pieces will be measured in that column or neither will as demonstrated below.</p>
-        <div id="images7" class="image-container">
-            <img src="images/allOrNothing.jpg" alt="Column 4 will either contain both pieces or neither of the pieces">
-            <img src="images/allCase.jpg" alt="The result for both pieces measured in the same column.">
-            <img src="images/nothingCase.jpg" alt="The result for neither piece being measured in the middle column">
-        </div>
-    </div>
-
-    <script>
-        function toggleImages(containerId) {
-            var container = document.getElementById(containerId);
-            if (container.style.display === "none" || container.style.display === "") {
-                container.style.display = "flex";
-            } else {
-                container.style.display = "none";
-            }
-        }
-    </script>
-</body>
-</html> -->
