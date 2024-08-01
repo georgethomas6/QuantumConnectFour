@@ -51,7 +51,6 @@ export default class Game {
     return this.#gameState;
   }
 
-
   /**
    * @returns string
    */
@@ -175,10 +174,8 @@ export default class Game {
     );
     let chosenColumn = choice == 0 ? ithCharacter[0] : ithCharacter[1];
     // We just have to filter for the outcome we wanted
-    let isEntangled =
-      this.doWeNeedToEntangle(piecesToBeMeasured[0], piecesToBeMeasured[1])
-        .length != 0;
-
+    let isEntangled = this.isEntanglementOccuring();
+    console.log("IS ENTANGLE??" + isEntangled);
     if (isEntangled) {
       if (this.#moveStates.charAt(this.#moveStates.length - 1) == "C") {
         console.log(" IS ENTANGLED AND LAST MOVE IS CERTAIN");
@@ -209,17 +206,11 @@ export default class Game {
         (game) => game.charAt(this.#moveStates.length - 3) == chosenColumn
       ); // get rid of games where charAt measuring index is not equal to chosen column
       let newMoveStates = "";
-      for (let y = 0; y < this.#moveStates.length; y++) {
-        if (this.#moveStates.length - 1 > y) {
-          newMoveStates = newMoveStates.concat("C");
-        } else {
-          newMoveStates = newMoveStates.concat(this.#moveStates.charAt(y));
-        }
+      for (let y = 0; y < this.#moveStates.length - 1; y++) {
+        newMoveStates = newMoveStates.concat("C");
       }
 
-      newMoveStates.concat(
-        this.#moveStates.charAt(this.#moveStates.length - 1)
-      );
+      newMoveStates = newMoveStates.concat(this.#moveStates.charAt(this.#moveStates.length - 1));
       this.#moveStates = newMoveStates;
       return;
     }
@@ -230,18 +221,19 @@ export default class Game {
       (game) => game.charAt(game.length - 3) == chosenColumn
     );
     console.log(
-      "GAME STATE AFTER MEASURING A NON ENTANGLED SUPERPOS" + this.#gameState
+      "GAME STATE AFTER MEASURING A NON ENTANGLED SUPERPOS " + this.#gameState
     );
     let newMoveStates = "";
-    for (let y = 0; y < this.#moveStates.length; y++) {
-      if (this.#moveStates.length - 3 >= y) {
-        newMoveStates = newMoveStates.concat("C");
-      } else {
-        newMoveStates = newMoveStates.concat(this.#moveStates.charAt(y));
-      }
+    for (let y = 0; y < this.#moveStates.length - 2; y++) {
+      newMoveStates = newMoveStates.concat("C");
     }
 
-    newMoveStates.concat(this.#moveStates.charAt(this.#moveStates.length - 1));
+    newMoveStates = newMoveStates.concat(
+      this.#moveStates.charAt(this.#moveStates.length - 2)
+    );
+    newMoveStates = newMoveStates.concat(
+      this.#moveStates.charAt(this.#moveStates.length - 1)
+    );
     this.#moveStates = newMoveStates;
     // TODO FILTER BASED ON COLUMN CHOICE OF SUPER POSITION
   }
@@ -355,6 +347,34 @@ export default class Game {
   }
 
   /**
+   * Finds the repeating character in an entanglement
+   * @returns
+   */
+  findCharacterInAllCase() {
+    let index = this.#moveStates.length - 2;
+    let ithCharacters = this.getIthCharacter(this.#gameState, index);
+    let count = 0;
+    console.log("THIS IS THE ITH CHARACTER " + ithCharacters);
+    for (let y = 0; y < this.#gameState.length; y++) {
+      let game = this.#gameState[y];
+      for (let t = 0; t < ithCharacters.length; t++) {
+        console.log("LOOKING AT CHAR " + ithCharacters[t]);
+        let character = ithCharacters[t];
+        for (let i = index; i < this.#moveStates.length; i++) {
+          if (game.charAt(i) == character) {
+            count++;
+          }
+          if (count == 2) {
+            return character;
+          }
+        }
+        count = 0;
+      }
+    }
+    return -1;
+  }
+
+  /**
    * This function filters the game states if entanglement should occur. Should be called at the end of placing a vertical or horizontal piece.
    * @param {int} firstPlacement -> where the first half of the superposition was placed
    * @param {int} secondPlacement -> where the second half of the superposition was placed
@@ -371,27 +391,27 @@ export default class Game {
       );
 
       let superpositionIndex = this.#gameState[0].length - 1; // length - 1 because of zero indexing
-
-      // TODO WRITE FUNCTION THAT FINDS THE HIGHEST FREQUENCY CHARACTER IN A GAMESTATE 
-      // TODO 
-      // TODO 
-      //TODO 
+      let repeatedChar = this.findCharacterInAllCase();
+      console.log("THIS IS THE REPEATED CHAR " + repeatedChar);
 
       if (entanglementType == "A") {
         console.log("CASE A");
         this.#gameState = this.#gameState.filter(
           (game) =>
-            game.charAt(superpositionIndex) == repeatingChar && game.charAt(superpositionIndex - 1) == repeatingChar || // THIS IS THE ALL CASE
-          game.charAt(superpositionIndex) != repeatingChar  && game.charAt(superpositionIndex - 1) != repeatingChar
+            (game.charAt(superpositionIndex) == repeatedChar &&
+              game.charAt(superpositionIndex - 1) == repeatedChar) || // THIS IS THE ALL CASE
+            (game.charAt(superpositionIndex) != repeatedChar &&
+              game.charAt(superpositionIndex - 1) != repeatedChar)
         );
       } else {
         console.log("CASE B");
         this.#gameState = this.#gameState.filter(
           (game) =>
             !(
-              game.charAt(superpositionIndex) == repeatingChar && game.charAt(superpositionIndex - 1) == repeatingChar || // THIS IS THE ALL CASE
-          game.charAt(superpositionIndex) != repeatingChar  && game.charAt(superpositionIndex - 1) != repeatingChar
-        
+              (game.charAt(superpositionIndex) == repeatedChar &&
+                game.charAt(superpositionIndex - 1) == repeatedChar) || // THIS IS THE ALL CASE
+              (game.charAt(superpositionIndex) != repeatedChar &&
+                game.charAt(superpositionIndex - 1) != repeatedChar)
             ) // THIS IS THE NOTHING CASE
         );
       }
@@ -659,6 +679,24 @@ export default class Game {
   }
 
   /**
+   * Is entanglement occuring
+   */
+  isEntanglementOccuring() {
+    for (let y = 9; y > 1; y--) {
+      for (let x = 0; x < 7; x++) {
+        let isEntangled =
+          (this.#board[y][x] == "PXX" && this.#board[y - 1][x] == "XXY") ||
+          (this.#board[y][x] == "XXP" && this.#board[y - 1][x] == "YXX") ||
+          (this.#board[y][x] == "YXX" && this.#board[y - 1][x] == "XXP") ||
+          (this.#board[y][x] == "XXY" && this.#board[y - 1][x] == "PXX");
+        if (isEntangled) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+  /**
    * This function returns an array of a single x and y position if we need to entangle. It returns an empty array otherwise.
    * @return [x, y] or []
    */
@@ -816,7 +854,6 @@ export default class Game {
     // We have to call after gamdState to board because handleEntanglement relies on the data stored in the board to find entanglement
     this.handleEntanglement(firstPlacement, column);
     this.gameStateToBoard();
-
 
     return "done";
   }
@@ -984,6 +1021,7 @@ export default class Game {
       console.log("THIS IS PIECE TO MEASURE");
       console.log(this.findPiecesToMeasure());
       this.measure();
+      this.gameStateToBoard();
       console.log("GAME STATES " + this.#gameState);
       console.log("MOVE STATES " + this.#moveStates);
       console.log(" ");
