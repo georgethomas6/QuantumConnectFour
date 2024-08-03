@@ -5,11 +5,6 @@
 
 import Game from "./Game.js";
 
-
-
-
-
-
 let board = [
   ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],
   ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"],

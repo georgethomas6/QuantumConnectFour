@@ -5,13 +5,19 @@ export default class Graphics {
   #width;
   #cellWidth;
   #cellHeight;
+  #radius;
   constructor() {
     this.#canvas = document.getElementById("myCanvas");
     this.#height = this.#canvas.height;
     this.#width = this.#canvas.width;
     this.#ctx = this.#canvas.getContext("2d");
-    this.#cellWidth = this.#width / 9; // 9 is the number of columns + 2 for padding 
+    this.#cellWidth = this.#width / 9; // 9 is the number of columns + 2 for padding
     this.#cellHeight = this.#height / 10; // 10 is the number of rows + 2 for padding
+    this.#radius = this.#height / 30;
+  }
+
+  get height(){
+    return this.#height;
   }
 
   get cellHeight() {
@@ -26,7 +32,7 @@ export default class Graphics {
    * Clears the canvas with a grey background
    */
   clearCanvasGrey() {
-    this.#ctx.fillStyle = "grey";
+    this.#ctx.fillStyle = "rgb(242, 240, 245)";
     // Fill the entire canvas with the green color
     this.#ctx.fillRect(0, 0, this.#canvas.width, this.#canvas.height);
   }
@@ -35,11 +41,11 @@ export default class Graphics {
    * Draws the rows in the board
    */
   drawRows() {
-
     const startWidth = this.#cellWidth;
     const endWidth = this.#cellWidth * 8; // stop at 8 for padding
     //draw rows
-    for (let i = 3; i <= 9; i++) { // stop at 9 for padding
+    for (let i = 3; i <= 9; i++) {
+      // stop at 9 for padding
       const lineY = this.#cellHeight * i;
       this.#ctx.beginPath();
       this.#ctx.lineWidth = 4;
@@ -54,9 +60,9 @@ export default class Graphics {
    * Draws the columns in the board
    */
   drawColumns() {
-    //9 is the number of rows
-    const startHeight = this.#cellHeight * 3; // want to start at cellHeight * 3 because we don't want to draw the phantom rows
-    const endHeight = this.#cellHeight * 9; // stop at 9 for padding
+    // The +- 2 is just a magic number to complete the corners
+    const startHeight = this.#cellHeight * 3 - 2; // want to start at cellHeight * 3 because we don't want to draw the phantom rows
+    const endHeight = this.#cellHeight * 9 + 2; // stop at 9 for padding
 
     //draw cols
     for (let i = 1; i < 9; i++) {
@@ -85,13 +91,19 @@ export default class Graphics {
    * @param {string} fillColor -> color of piece, should be only "purple" or "yellow"
    */
   drawPiece(xCoord, yCoord, fillColor) {
-    const radius = this.#height / 30; // 30 is arbitrary just magic
     //change the fill and stroke colors
-    this.#ctx.fillStyle = fillColor;
-    this.#ctx.strokeStyle = fillColor;
+    if (fillColor == "purple") {
+      this.#ctx.fillStyle = "rgb(88, 44, 131)";
+      this.#ctx.strokeStyle = "rgb(88, 44, 131)";
+    } else {
+      this.#ctx.fillStyle = "rgb(255, 185, 28)";
+      this.#ctx.strokeStyle = "rgb(255, 185, 28)";
+    }
+
     //draw the circle
     this.#ctx.beginPath();
-    this.#ctx.arc(xCoord, yCoord, radius, 0, 2 * Math.PI);
+    this.#ctx.arc(xCoord, yCoord, this.#radius, 0, 2 * Math.PI);
+
     //draw and fill the circle
     this.#ctx.fill();
     this.#ctx.stroke();
@@ -109,17 +121,25 @@ export default class Graphics {
    */
   drawVerticalStatePiece(xCoord, yCoord, fillColor) {
     //Highest and lowest points on the circle
-    const topY = yCoord - this.#height / 30 - 2;  // 2 is just magic
-    const bottomY = yCoord + this.#height / 30 + 2; 
+    const topY = yCoord - this.#height / 30 - 2; // 2 is just magic
+    const bottomY = yCoord + this.#height / 30 + 2;
     //draw a piece as normal
     this.drawPiece(xCoord, yCoord, fillColor);
 
+    if (fillColor == "purple"){
+      this.#ctx.fillStyle = "white";
+      this.#ctx.strokeStyle = "white";
+    }
     // Draw the vertical line
     this.#ctx.beginPath();
-    this.#ctx.lineWidth = 4;
+    this.#ctx.lineWidth = 6;
     this.#ctx.moveTo(xCoord, topY);
     this.#ctx.lineTo(xCoord, bottomY);
     this.#ctx.stroke();
+
+    this.#ctx.fillStyle = "black";
+    this.#ctx.strokeStyle = "black";
+
   }
 
   /**
@@ -130,18 +150,27 @@ export default class Graphics {
    */
   drawHorizontalStatePiece(xCoord, yCoord, fillColor) {
     //left most and right most points on the circle
-    const leftX = xCoord - this.#height / 30 - 2; // 2 is just magic 
-    const rigthX = xCoord + this.#height / 30 + 2; 
+    const leftX = xCoord - this.#height / 30 - 2; // 2 is just magic
+    const rigthX = xCoord + this.#height / 30 + 2;
 
     //draw a piece as normal
     this.drawPiece(xCoord, yCoord, fillColor);
 
+    if (fillColor == "purple"){
+      this.#ctx.fillStyle = "white";
+      this.#ctx.strokeStyle = "white";
+    }
+
     // Draw the horizontal line
     this.#ctx.beginPath();
-    this.#ctx.lineWidth = 4;
+    this.#ctx.lineWidth = 6;
     this.#ctx.moveTo(leftX, yCoord);
     this.#ctx.lineTo(rigthX, yCoord);
     this.#ctx.stroke();
+
+    this.#ctx.fillStyle = "black";
+    this.#ctx.strokeStyle = "black";
+
   }
   /**
    * Initializes a Hashmap that matches state cases to numbers

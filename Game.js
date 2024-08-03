@@ -1,7 +1,7 @@
 // Game.js
 
-
-// fix turn in progress just jumping
+// TODO fix allowing people to change state if there is only one column
+// TODO implement game loop
 
 import TurnInProgress from "./TurnInProgress.js";
 import Graphics from "./Graphics.js";
@@ -14,11 +14,7 @@ export default class Game {
   #graphics;
   constructor() {
     //initalize blank board
-    this.#board = [];
-    for (let y = 0; y < 8; y++) {
-      let row = ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"];
-      this.#board.push(row);
-    }
+    this.#board = this.initBlankBoard();
     this.#turnInProgress = new TurnInProgress("purple");
     this.#graphics = new Graphics();
     this.#gameState = []; // this will be an array of strings
@@ -28,6 +24,7 @@ export default class Game {
   //GETTERS
 
   /**
+   * Returns the board
    * @returns string[][]
    */
   get board() {
@@ -35,6 +32,7 @@ export default class Game {
   }
 
   /**
+   * Returns the TurnInProgress
    * @returns TurnInProgress
    */
   get turnInProgress() {
@@ -42,6 +40,7 @@ export default class Game {
   }
 
   /**
+   * Returns the current gameState
    * @returns string[]
    */
   get gameState() {
@@ -49,21 +48,15 @@ export default class Game {
   }
 
   /**
+   * Returns the current moveState
    * @returns string
    */
-  get typeOfMoves() {
+  get moveStates() {
     return this.#moveStates;
   }
 
   /**
-   * Sets the board to the param. For debugging only.
-   */
-  set board(board) {
-    this.#board = board;
-  }
-
-  /**
-   * Sets the game state to the param.
+   * Sets the gameState
    * @param {int} state
    */
   set gameState(state) {
@@ -71,10 +64,18 @@ export default class Game {
   }
 
   /**
-   * Sets the typeOfMoves to the param.
+   * Sets the board
+   * @param {string[][]} board
+   */
+  set board(board) {
+    this.#board = board;
+  }
+
+  /**
+   * Sets the moveStates
    * @param {string} typeofMoves
    */
-  set typeOfMoves(typeofMoves) {
+  set moveStates(typeofMoves) {
     this.#moveStates = typeofMoves;
   }
 
@@ -85,53 +86,10 @@ export default class Game {
    */
   initBlankBoard() {
     let newBoard = [];
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 8; i++) {
       newBoard.push(["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"]);
     }
     return newBoard;
-  }
-
-  /**
-   * Returns the position of entangled pieces in an array.
-   * @return [x1, y1, x2, y2, x3, y3, x4, y4]
-   */
-  entanglementIsHappeningHere(firstPlacement, secondPlacement) {
-    let returnValue = [];
-    let entanglementOccuring = this.doWeNeedToEntangle(
-      firstPlacement,
-      secondPlacement
-    ); // FIND FIRST INSTANCE OF ENTANGLEMENT TO FIND TARGETS
-    let firstPieceToLookForX = entanglementOccuring[0];
-    let firstPieceToLookForY = entanglementOccuring[1];
-    let secondPieceToLookForX = entanglementOccuring[0];
-    let secondPieceToLookForY = entanglementOccuring[1] + 1;
-    let firstPieceToLookFor =
-      this.#board[firstPieceToLookForY][firstPieceToLookForX]; // SAVE TARGET 1
-    let secondPieceToLookFor =
-      this.#board[secondPieceToLookForY][secondPieceToLookForX]; // SAVE TARGET 2
-
-    // ENTANGLEMENT IS OCCURINIG HERE SO PUSH THESE PIECES TO RETURN VALUE
-    returnValue.push(firstPieceToLookForX);
-    returnValue.push(firstPieceToLookForY);
-    returnValue.push(secondPieceToLookForX);
-    returnValue.push(secondPieceToLookForY);
-
-    // NOW WE NEED TO FIND THE LOWEST PIECES THAT MATCH THEIR STRING ON THE BOARD NOT IN THE SAME COLUMN
-    for (let y = 7; y > 0; y--) {
-      for (let x = 0; x < 7; x++) {
-        if (x == firstPieceToLookForX) {
-          continue; // WE DO NOT WANT TO SEARCH THE COLUMN WE ALREADY KNOW ENTANGLEMENT IS HAPPENING IN
-        } else if (
-          this.#board[y][x] == firstPieceToLookFor ||
-          this.#board[y][x] == secondPieceToLookFor
-        ) {
-          returnValue.push(x);
-          returnValue.push(y);
-        }
-      }
-    }
-
-    return returnValue;
   }
 
   /**
@@ -155,35 +113,35 @@ export default class Game {
     }
   }
   /**
-   * This function performs a measurement. It finds the pieces on the board that is about to be measured, and filters
-   * the gameState after it measures. If there is entanglement it just selects one of the gameStates.
+   * This function performs a measurement. It finds the pieces on the board that need to be measured, and filters
+   * the gameState depending on what kind of measurement needs to occur
    */
   measure() {
+    // If there is nothing to measure return.
     let piecesToBeMeasured = this.findPiecesToMeasure();
     if (piecesToBeMeasured.length == 0) {
-      return; // If there is nothing to measure return.
+      return;
     }
 
-    let choice = this.getRandomIntInclusiveExclusive(0, 2);
+    let choice = this.getRandomIntInclusiveExclusive(0, 2); // "random" value for our measurement
     let ithCharacter = this.getIthCharacter(
       this.#gameState,
       this.#moveStates.length - 3
-    );
+    ); // these are the columns in superposition
     let chosenColumn = choice == 0 ? ithCharacter[0] : ithCharacter[1];
-    // We just have to filter for the outcome we wanted
     let isEntangled = this.isEntanglementOccuring();
-    console.log("IS ENTANGLE??" + isEntangled);
     if (isEntangled) {
       if (this.#moveStates.charAt(this.#moveStates.length - 1) == "C") {
-        console.log(" IS ENTANGLED AND LAST MOVE IS CERTAIN");
-        // If the last move is certain we just need to pick a state out of thep possible ones
+        // If the last move is certain we just need to pick a state out of the possible ones
         let choice = this.getRandomIntInclusiveExclusive(
           0,
           this.#gameState.length
         );
         let newGameState = [];
         newGameState.push(this.#gameState[choice]);
-        this.#gameState = newGameState;
+        this.#gameState = newGameState; // update the game state based on our choice
+
+        // All moves on the board are now certain, make moveStates reflect that
         let newMoveState = "";
         for (let i = 0; i < this.#moveStates.length; i++) {
           newMoveState = newMoveState.concat("C");
@@ -192,39 +150,38 @@ export default class Game {
         this.#moveStates = newMoveState;
         return;
       }
-      console.log(" IS ENTANGLED AND LAST MOVE IS NOT CERTAIN");
 
-      // there is still a superposition on the board
-      let entanglementType = this.findEntanglementType(
-        piecesToBeMeasured[0],
-        piecesToBeMeasured[2]
-      );
+      // There is a superposition but the last move is not certain, so we cannot just pick any game state as multiple are still possible after the entanglement resolves
+
       this.#gameState = this.#gameState.filter(
         (game) => game.charAt(this.#moveStates.length - 3) == chosenColumn
-      ); // get rid of games where charAt measuring index is not equal to chosen column
+      ); // keep the game states where the move we chose happens
+
+      // The only uncertain move on the board is the previous move played, make moveStates reflect that
       let newMoveStates = "";
       for (let y = 0; y < this.#moveStates.length - 1; y++) {
         newMoveStates = newMoveStates.concat("C");
       }
-
-      newMoveStates = newMoveStates.concat(this.#moveStates.charAt(this.#moveStates.length - 1));
+      newMoveStates = newMoveStates.concat(
+        this.#moveStates.charAt(this.#moveStates.length - 1)
+      );
       this.#moveStates = newMoveStates;
       return;
     }
-    console.log("IS NOT ENTANGLED BUT GO STUFF TO MEASURE");
-    // STUFF IS NOT ENTANGLED SO WE ARE ONLY MEASURING SUPER POSITIONS
+
+    // There is a superposition, but it is not entangled with anyone
 
     this.#gameState = this.#gameState.filter(
       (game) => game.charAt(game.length - 3) == chosenColumn
-    );
-    console.log(
-      "GAME STATE AFTER MEASURING A NON ENTANGLED SUPERPOS " + this.#gameState
-    );
+    ); // filter based on the column we chose
+
+    // The move we measured is now certain, make moveStates reflect that
     let newMoveStates = "";
     for (let y = 0; y < this.#moveStates.length - 2; y++) {
       newMoveStates = newMoveStates.concat("C");
     }
 
+    // Append the other type of moves onto the moveStates
     newMoveStates = newMoveStates.concat(
       this.#moveStates.charAt(this.#moveStates.length - 2)
     );
@@ -232,11 +189,10 @@ export default class Game {
       this.#moveStates.charAt(this.#moveStates.length - 1)
     );
     this.#moveStates = newMoveStates;
-    // TODO FILTER BASED ON COLUMN CHOICE OF SUPER POSITION
   }
 
   /**
-   * Returns an array of the rows at which the pieces will fall
+   * Returns an array of the rows at which the pieces will fall.
    * @param {string[][]} board -> board to use
    * @param {int[]} columnsPlayedIn -> array of columns played in
    */
@@ -251,27 +207,29 @@ export default class Game {
   }
 
   /**
-   * This function updates the board to reflect the gameState after a measurement has occured.
+   * This function updates the board to reflect the gameState.
    */
   gameStateToBoard() {
     let moveStates = this.#moveStates;
-    let newBoard = this.initBlankBoard();
+    let newBoard = this.initBlankBoard(); // this is the board that will reflect our new gameState
     for (let i = 0; i < moveStates.length; i++) {
       switch (
         moveStates.charAt(i) //We want to switch based on the character at the ith position
       ) {
         case "C": // the piece is certain
           let column = this.#gameState[0].charAt(i); // every gameState will have the same character at the ith position since its certain
-          let row = this.firstOpenRow(newBoard, column);
+          let row = this.firstOpenRow(newBoard, column); // find the depth that piece should fall to
+          // find the appropriate color so we know what string to put on the board
           if (i % 2 == 0) {
             newBoard[row][column] = "PPP";
             continue; //kill this iteration
           }
           newBoard[row][column] = "YYY";
           break;
-        case "H":
+        case "H": // the piece is a horizontal superposition
           let columnsPlayedIn = this.getIthCharacter(this.#gameState, i); // the columns played in are all of the ith characters in the gamestates
-          let rows1 = this.findDepths(newBoard, columnsPlayedIn);
+          let rows1 = this.findDepths(newBoard, columnsPlayedIn); // find the depths of the columns played in
+          // place the pieces in this horizontal supperposition on the board
           for (let col = 0; col < columnsPlayedIn.length; col++) {
             let row = rows1[col];
             let column = columnsPlayedIn[col];
@@ -284,7 +242,8 @@ export default class Game {
           break;
         case "V":
           let colsPlayedIn2 = this.getIthCharacter(this.#gameState, i); // the columns played in are all of the ith characters in the gamestates
-          let rows2 = this.findDepths(newBoard, colsPlayedIn2);
+          let rows2 = this.findDepths(newBoard, colsPlayedIn2); // find the depths of the columns played in
+          // place the pieces in this horizontal supperposition on the board
           for (let col = 0; col < colsPlayedIn2.length; col++) {
             let row = rows2[col];
             let column = colsPlayedIn2[col];
@@ -302,15 +261,16 @@ export default class Game {
 
   /**
    * This function updates the gameState. It modifies the game state based on the moves it was given. If it
-   * is given two different moves it updates behaves like it is responding to a quantum move. If it is given
+   * is given two different moves it behaves like it is responding to a quantum move. If it is given
    * the same move it behaves like it is responding to a certain move.
-   * @param {int} firstPlacement
-   * @param {int} secondPlacement
+   * @param {int} firstPlacement -> the first half of the superposition, or the column placed in if certain
+   * @param {int} secondPlacement -> the second half of the superposition, or the column placed in if certain
    */
   updateGameState(firstPlacement, secondPlacement) {
     let newGameState = [];
     let wasCertainMove = firstPlacement == secondPlacement;
     let gameStateEmpty = this.#gameState.length == 0;
+    // If the game state was empty then we can modify the current gameState we have to create one 
     if (gameStateEmpty) {
       if (wasCertainMove) {
         let vectorOne = firstPlacement.toString();
@@ -351,11 +311,9 @@ export default class Game {
     let index = this.#moveStates.length - 2;
     let ithCharacters = this.getIthCharacter(this.#gameState, index);
     let count = 0;
-    console.log("THIS IS THE ITH CHARACTER " + ithCharacters);
     for (let y = 0; y < this.#gameState.length; y++) {
       let game = this.#gameState[y];
       for (let t = 0; t < ithCharacters.length; t++) {
-        console.log("LOOKING AT CHAR " + ithCharacters[t]);
         let character = ithCharacters[t];
         for (let i = index; i < this.#moveStates.length; i++) {
           if (game.charAt(i) == character) {
@@ -389,10 +347,8 @@ export default class Game {
 
       let superpositionIndex = this.#gameState[0].length - 1; // length - 1 because of zero indexing
       let repeatedChar = this.findCharacterInAllCase();
-      console.log("THIS IS THE REPEATED CHAR " + repeatedChar);
 
       if (entanglementType == "A") {
-        console.log("CASE A");
         this.#gameState = this.#gameState.filter(
           (game) =>
             (game.charAt(superpositionIndex) == repeatedChar &&
@@ -401,7 +357,6 @@ export default class Game {
               game.charAt(superpositionIndex - 1) != repeatedChar)
         );
       } else {
-        console.log("CASE B");
         this.#gameState = this.#gameState.filter(
           (game) =>
             !(
@@ -413,8 +368,6 @@ export default class Game {
         );
       }
     }
-    console.log("THESE ARE GAME STATES AFTER HANDLING ENTANGLEMENT WAS CALLED");
-    console.log(this.#gameState);
   }
   /**
    * Checks for an uncertain under the pieces played in a given column
@@ -708,7 +661,7 @@ export default class Game {
     // CHECK TO MAKE SURE WE DON'T GO TO INDEX OUT OF BOUNDS
 
     // CHECK FOR DOUBLE ENTANGLEMENT. THIS CHECK IS OK BECAUSE WE ONLY EVER HAVE THREE QUANTUM PIECES ON THE BOARD AT A TIME
-    if (firstY < 7) {
+    if (firstY < 6) {
       let pieceBelowFirst = this.#board[firstY + 1][firstX];
       let secondPieceBelowFirst = this.#board[firstY + 2][firstX];
       let piecesBelowAlreadyEntangled =
@@ -721,7 +674,7 @@ export default class Game {
       }
     }
 
-    if (secondY < 7) {
+    if (secondY < 6) {
       let pieceBelowFirst = this.#board[secondY + 1][secondX];
       let secondPieceBelowFirst = this.#board[secondY + 2][secondX];
       let piecesBelowAlreadyEntangled =
@@ -956,7 +909,7 @@ export default class Game {
    */
   reactToRightButton() {
     this.#turnInProgress.incrementPosition();
-    if (this.#turnInProgress.column == this.#turnInProgress.firstPlacement){
+    if (this.#turnInProgress.column == this.#turnInProgress.firstPlacement) {
       this.#turnInProgress.incrementPosition();
     }
     this.#graphics.clearCanvasGrey();
@@ -975,7 +928,7 @@ export default class Game {
    */
   reactToLeftButton() {
     this.#turnInProgress.decrementPosition();
-    if (this.#turnInProgress.column == this.#turnInProgress.firstPlacement){
+    if (this.#turnInProgress.column == this.#turnInProgress.firstPlacement) {
       this.#turnInProgress.decrementPosition();
     }
     this.#graphics.clearCanvasGrey();
@@ -1020,17 +973,8 @@ export default class Game {
   reactToPlaceButton() {
     if (this.place() == "done") {
       // Update time on board first because the place functions will set the time on board value for the new piece to 1 and we don't want to accidentally update it to 2
-
-      console.log("THIS IS PIECE TO MEASURE");
-      console.log(this.findPiecesToMeasure());
       this.measure();
       this.gameStateToBoard();
-      console.log("GAME STATES " + this.#gameState);
-      console.log("MOVE STATES " + this.#moveStates);
-      console.log(" ");
-      console.log("YOU PLACED");
-      console.log(" ");
-
       this.changeTurn();
     }
     this.#graphics.clearCanvasGrey();
