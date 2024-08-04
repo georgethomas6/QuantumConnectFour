@@ -1,5 +1,3 @@
-// Game.js
-
 // TODO fix allowing people to change state if there is only one column
 // TODO implement game loop
 
@@ -7,79 +5,53 @@ import TurnInProgress from "./TurnInProgress.js";
 import Graphics from "./Graphics.js";
 
 export default class Game {
-  #board; // A 10 x 7 array of strings, each representing a cell in the board
-  #turnInProgress; // the move that is in the process of being made
-  #gameState;
-  #moveStates; // this is a string of the type of moves that have been played, consists of V, C, H
-  #graphics;
-  #winner;
+  #board; // {string[8][7]}
+  #turnInProgress; // {TurnInProgress} the move in the process of being made
+  #gameState; // {string[]} current game state
+  #moveStates; // {string} string of the type of moves that have been played, consists of V, C, H
+  #graphics; // {Graphics} the graphics object
+  #winner; // {string} who has won the game
   constructor() {
-    //initalize blank board
     this.#board = this.initBlankBoard();
     this.#turnInProgress = new TurnInProgress("purple");
     this.#graphics = new Graphics();
-    this.#gameState = []; // this will be an array of strings
+    this.#gameState = [];
     this.#moveStates = "";
     this.#winner = "XXX";
   }
 
-  //GETTERS
+  // Getters
 
   get winner() {
     return this.#winner;
   }
-  /**
-   * Returns the board
-   * @returns string[][]
-   */
+
   get board() {
     return this.#board;
   }
 
-  /**
-   * Returns the TurnInProgress
-   * @returns TurnInProgress
-   */
   get turnInProgress() {
     return this.#turnInProgress;
   }
 
-  /**
-   * Returns the current gameState
-   * @returns string[]
-   */
   get gameState() {
     return this.#gameState;
   }
 
-  /**
-   * Returns the current moveState
-   * @returns string
-   */
   get moveStates() {
     return this.#moveStates;
   }
 
-  /**
-   * Sets the gameState
-   * @param {int} state
-   */
+  // Setters
+
   set gameState(state) {
     this.#gameState = state;
   }
 
-  /**
-   * Sets the board
-   * @param {string[][]} board
-   */
   set board(board) {
     this.#board = board;
   }
 
-  /**
-   * Sets the moveStates
-   * @param {string} typeofMoves
-   */
   set moveStates(typeofMoves) {
     this.#moveStates = typeofMoves;
   }
@@ -91,7 +63,7 @@ export default class Game {
   // GAME FUNCTIONS
 
   /**
-   * Returns a 7 x 10 array of all "XXX"
+   * Returns an 8 x 7 array of all "XXX".
    */
   initBlankBoard() {
     let newBoard = [];
@@ -102,31 +74,226 @@ export default class Game {
   }
 
   /**
-   * Returns "A" if it is an all or nothing case, "B" otherwise
-   * @param {int} column -> entanglement is occuring in
-   * @param {int} -> row first height in the entanglement
+   * Returns the first instance of a value occuring on the board in a given column
+   * @param {string} target
+   * @param {int} column
+   * Returns row of first occurance of target. Returns -1 if not found
    */
-  findEntanglementType(column, row) {
-    if (row == 7) {
-      return; // AVOID INDEX OUT OF BOUNDS
+  findInColumn(target, column) {
+    for (let y = 7; y > 0; y--) {
+      let foundTarget = this.#board[y][column] == target;
+      if (foundTarget) {
+        return y;
+      }
     }
-    let topPiece = this.#board[row][column];
-    let bottomPiece = this.#board[row + 1][column];
-    if (
-      (bottomPiece == "PXX" && topPiece == "XXY") ||
-      (bottomPiece == "YXX" && topPiece == "XXP")
-    ) {
-      return "A";
-    } else {
-      return "B";
-    }
+    return -1;
   }
+
   /**
-   * This function performs a measurement. It finds the pieces on the board that need to be measured, and filters
-   * the gameState depending on what kind of measurement needs to occur
+   * Returns an array of the depths at which the given pieces will fall.
+   * @param {string[][]} board -> board to use
+   * @param {int[]} columnsPlayedIn -> array of columns played in, should not have repeated entries
+   */
+  findDepths(board, columnsPlayedIn) {
+    let rows = [];
+    for (let i = 0; i < columnsPlayedIn.length; i++) {
+      let column = columnsPlayedIn[i];
+      let row = this.firstOpenRow(board, column);
+      rows.push(row);
+    }
+    return rows;
+  }
+
+  /**
+   * This function updates the board to reflect the gameState.
+   */
+  gameStateToBoard() {
+    let moveStates = this.#moveStates; // place holder to simplify syntax
+    let newBoard = this.initBlankBoard(); // this is the board that will reflect our new gameState
+    for (let i = 0; i < moveStates.length; i++) {
+      switch (
+        moveStates.charAt(i) // switch based on the type of move
+      ) {
+        case "C":
+          let column = this.#gameState[0].charAt(i); // every gameState will have the same character at the ith position since its certain
+          let row = this.firstOpenRow(newBoard, column); // find the depth that the piece should fall to
+          if (i % 2 == 0) {
+            newBoard[row][column] = "PPP";
+            continue; //kill this iteration
+          }
+          newBoard[row][column] = "YYY";
+          break;
+        case "H":
+          let columnsPlayedIn = this.getIthCharacter(this.#gameState, i); // the columns played in are the unique ith characters in the gamestates
+          let rows1 = this.findDepths(newBoard, columnsPlayedIn); // find the depths of the columns played in
+          // place the pieces in the horizontal supperposition on the board
+          for (let col = 0; col < columnsPlayedIn.length; col++) {
+            let row = rows1[col];
+            let column = columnsPlayedIn[col];
+            if (i % 2 == 0) {
+              newBoard[row][column] = "PXX";
+              continue; //kill this iteration
+            }
+            newBoard[row][column] = "YXX";
+          }
+          break;
+        case "V":
+          let colsPlayedIn2 = this.getIthCharacter(this.#gameState, i);
+          let rows2 = this.findDepths(newBoard, colsPlayedIn2);
+          for (let col = 0; col < colsPlayedIn2.length; col++) {
+            let row = rows2[col];
+            let column = colsPlayedIn2[col];
+            if (i % 2 == 0) {
+              newBoard[row][column] = "XXP";
+              continue; //kill this iteration
+            }
+            newBoard[row][column] = "XXY";
+          }
+          break;
+      }
+    }
+    this.#board = newBoard; // Update Board to reflect gameState
+  }
+
+  /**
+   * This function updates the gameState based on the given placements. If it is given two different moves
+   * it behaves like it is responding to a quantum move. If it is given the same move it behaves like it is
+   * responding to a certain move.
+   * @param {int} firstPlacement -> the first half of the superposition, or the column placed in if certain
+   * @param {int} secondPlacement -> the second half of the superposition, or the column placed in if certain
+   */
+  updateGameState(firstPlacement, secondPlacement) {
+    let newGameState = [];
+    let wasCertainMove = firstPlacement == secondPlacement;
+    let gameStateEmpty = this.#gameState.length == 0;
+    // If the game state is empty we have to create one, then exit the function
+    if (gameStateEmpty) {
+      if (wasCertainMove) {
+        let vectorOne = firstPlacement.toString();
+        newGameState.push(vectorOne);
+        this.#gameState = newGameState;
+      } else {
+        let vectorOne = firstPlacement.toString();
+        let vectorTwo = secondPlacement.toString();
+        newGameState.push(vectorOne);
+        newGameState.push(vectorTwo);
+        this.#gameState = newGameState;
+      }
+      return;
+    }
+
+    // Game state was not empty update accordingly
+    if (wasCertainMove) {
+      for (let i = 0; i < this.#gameState.length; i++) {
+        let vectorOne = this.#gameState[i].concat(firstPlacement.toString());
+        newGameState.push(vectorOne);
+      }
+    } else {
+      for (let i = 0; i < this.#gameState.length; i++) {
+        let vectorOne = this.#gameState[i].concat(firstPlacement.toString());
+        let vectorTwo = this.#gameState[i].concat(secondPlacement.toString());
+        newGameState.push(vectorOne);
+        newGameState.push(vectorTwo);
+      }
+    }
+    this.#gameState = newGameState;
+  }
+
+  /**
+   * Returns an array containing the ith character of each string
+   * @param {string[]} gameStates -> an array of gameStates
+   * @returns char[] -> an array containing the ith character of each string;
+   */
+  getIthCharacter(gameStates, i) {
+    // Use a Set to store unique characters
+    const uniqueChars = new Set();
+
+    // Iterate over each string and add the character at the given index to the Set
+    gameStates.forEach((str) => {
+      if (str.length > i) {
+        uniqueChars.add(parseInt(str.charAt(i)));
+      }
+    });
+
+    // Convert the Set to an array and return it
+    return Array.from(uniqueChars);
+  }
+
+  /**
+   * This function returns a random integer between [min, max).
+   * @param {int} min
+   * @param {int} max
+   * @returns {int}
+   */
+  getRandomIntInclusiveExclusive(min, max) {
+    // Ensure min and max are integers
+    min = Math.ceil(min);
+    max = Math.floor(max);
+
+    // Generate a random integer between min (inclusive) and max (exclusive)
+    return Math.floor(Math.random() * (max - min)) + min;
+  }
+
+  /**
+   * This function tries to find pieces who need to be measured. It returns an empty array if no pieces need to be measured.
+   * @returns [x1, y1, x2, y2] or []
+   */
+  findPiecesToMeasure() {
+    let indexToMeasure = this.#moveStates.length - 3;
+    if (indexToMeasure < 0) {
+      return [];
+    }
+
+    if (this.#moveStates.charAt(indexToMeasure) == "C") {
+      return [];
+    }
+
+    let returnValue = [];
+    let state = this.#moveStates.charAt(indexToMeasure);
+    let options = this.getIthCharacter(
+      this.#gameState,
+      this.#moveStates.length - 3
+    );
+    let colorToLookFor = this.#moveStates.length % 2;
+    if (colorToLookFor == 1 && state == "V") {
+      let target = "XXP";
+      returnValue.push(options[0]);
+      returnValue.push(this.findInColumn(target, options[0]));
+      returnValue.push(options[1]);
+      returnValue.push(this.findInColumn(target, options[1]));
+      return returnValue;
+    } else if (colorToLookFor == 1 && state == "H") {
+      let target = "PXX";
+      returnValue.push(options[0]);
+      returnValue.push(this.findInColumn(target, options[0]));
+      returnValue.push(options[1]);
+      returnValue.push(this.findInColumn(target, options[1]));
+      return returnValue;
+    } else if (colorToLookFor == 0 && state == "V") {
+      let target = "XXY";
+      returnValue.push(options[0]);
+      returnValue.push(this.findInColumn(target, options[0]));
+      returnValue.push(options[1]);
+      returnValue.push(this.findInColumn(target, options[1]));
+      return returnValue;
+    } else if (colorToLookFor == 0 && state == "H") {
+      let target = "YXX";
+      returnValue.push(options[0]);
+      returnValue.push(this.findInColumn(target, options[0]));
+      returnValue.push(options[1]);
+      returnValue.push(this.findInColumn(target, options[1]));
+      return returnValue;
+    }
+
+    return [];
+  }
+
+  /**
+   * This function finds the pieces on the board that need to be measured, and filters
+   * the gameStates depending on what kind of measurement needs to occur.
    */
   measure() {
-    // If there is nothing to measure return.
+    // Return if there is nothing to measure return.
     let piecesToBeMeasured = this.findPiecesToMeasure();
     if (piecesToBeMeasured.length == 0) {
       return;
@@ -139,33 +306,33 @@ export default class Game {
     ); // these are the columns in superposition
     let chosenColumn = choice == 0 ? ithCharacter[0] : ithCharacter[1];
     let isEntangled = this.isEntanglementOccuring();
+
     if (isEntangled) {
-      if (this.#moveStates.charAt(this.#moveStates.length - 1) == "C") {
-        // If the last move is certain we just need to pick a state out of the possible ones
+      let lastMoveState = this.#moveStates.charAt(this.#moveStates.length - 1);
+      if (lastMoveState == "C") {
+        // If the last move is certain we just need to pick a state out of the possible ones, but we need to pick a choice out of the number of gameStates
         let choice = this.getRandomIntInclusiveExclusive(
           0,
           this.#gameState.length
         );
+        // update the game state based on our choice
         let newGameState = [];
         newGameState.push(this.#gameState[choice]);
-        this.#gameState = newGameState; // update the game state based on our choice
-
+        this.#gameState = newGameState;
         // All moves on the board are now certain, make moveStates reflect that
         let newMoveState = "";
         for (let i = 0; i < this.#moveStates.length; i++) {
           newMoveState = newMoveState.concat("C");
         }
-
         this.#moveStates = newMoveState;
         return;
       }
 
-      // There is a superposition but the last move is not certain, so we cannot just pick any game state as multiple are still possible after the entanglement resolves
+      // There is entanglement but the last move is a superposition
 
       this.#gameState = this.#gameState.filter(
         (game) => game.charAt(this.#moveStates.length - 3) == chosenColumn
       ); // keep the game states where the move we chose happens
-
       // The only uncertain move on the board is the previous move played, make moveStates reflect that
       let newMoveStates = "";
       for (let y = 0; y < this.#moveStates.length - 1; y++) {
@@ -178,7 +345,7 @@ export default class Game {
       return;
     }
 
-    // There is a superposition, but it is not entangled with anyone
+    // There is a superposition, but it is not entangled with anything
 
     this.#gameState = this.#gameState.filter(
       (game) => game.charAt(game.length - 3) == chosenColumn
@@ -201,127 +368,18 @@ export default class Game {
   }
 
   /**
-   * Returns an array of the rows at which the pieces will fall.
-   * @param {string[][]} board -> board to use
-   * @param {int[]} columnsPlayedIn -> array of columns played in
+   * Finds the repeating character in an entanglement. This function should only
+   * be called in handleEntanglement().
+   * @returns {string} -> the character that appears in the all case
    */
-  findDepths(board, columnsPlayedIn) {
-    let rows = [];
-    for (let i = 0; i < columnsPlayedIn.length; i++) {
-      let column = columnsPlayedIn[i];
-      let row = this.firstOpenRow(board, column);
-      rows.push(row);
-    }
-    return rows;
-  }
-
-  /**
-   * This function updates the board to reflect the gameState.
-   */
-  gameStateToBoard() {
-    let moveStates = this.#moveStates;
-    let newBoard = this.initBlankBoard(); // this is the board that will reflect our new gameState
-    for (let i = 0; i < moveStates.length; i++) {
-      switch (
-        moveStates.charAt(i) //We want to switch based on the character at the ith position
-      ) {
-        case "C": // the piece is certain
-          let column = this.#gameState[0].charAt(i); // every gameState will have the same character at the ith position since its certain
-          let row = this.firstOpenRow(newBoard, column); // find the depth that piece should fall to
-          // find the appropriate color so we know what string to put on the board
-          if (i % 2 == 0) {
-            newBoard[row][column] = "PPP";
-            continue; //kill this iteration
-          }
-          newBoard[row][column] = "YYY";
-          break;
-        case "H": // the piece is a horizontal superposition
-          let columnsPlayedIn = this.getIthCharacter(this.#gameState, i); // the columns played in are all of the ith characters in the gamestates
-          let rows1 = this.findDepths(newBoard, columnsPlayedIn); // find the depths of the columns played in
-          // place the pieces in this horizontal supperposition on the board
-          for (let col = 0; col < columnsPlayedIn.length; col++) {
-            let row = rows1[col];
-            let column = columnsPlayedIn[col];
-            if (i % 2 == 0) {
-              newBoard[row][column] = "PXX";
-              continue; //kill this iteration
-            }
-            newBoard[row][column] = "YXX";
-          }
-          break;
-        case "V":
-          let colsPlayedIn2 = this.getIthCharacter(this.#gameState, i); // the columns played in are all of the ith characters in the gamestates
-          let rows2 = this.findDepths(newBoard, colsPlayedIn2); // find the depths of the columns played in
-          // place the pieces in this horizontal supperposition on the board
-          for (let col = 0; col < colsPlayedIn2.length; col++) {
-            let row = rows2[col];
-            let column = colsPlayedIn2[col];
-            if (i % 2 == 0) {
-              newBoard[row][column] = "XXP";
-              continue; //kill this iteration
-            }
-            newBoard[row][column] = "XXY";
-          }
-          break;
-      }
-    }
-    this.#board = newBoard; // Update Board to reflect gameState
-  }
-
-  /**
-   * This function updates the gameState. It modifies the game state based on the moves it was given. If it
-   * is given two different moves it behaves like it is responding to a quantum move. If it is given
-   * the same move it behaves like it is responding to a certain move.
-   * @param {int} firstPlacement -> the first half of the superposition, or the column placed in if certain
-   * @param {int} secondPlacement -> the second half of the superposition, or the column placed in if certain
-   */
-  updateGameState(firstPlacement, secondPlacement) {
-    let newGameState = [];
-    let wasCertainMove = firstPlacement == secondPlacement;
-    let gameStateEmpty = this.#gameState.length == 0;
-    // If the game state was empty then we can modify the current gameState we have to create one
-    if (gameStateEmpty) {
-      if (wasCertainMove) {
-        let vectorOne = firstPlacement.toString();
-        newGameState.push(vectorOne);
-        this.#gameState = newGameState;
-      } else {
-        let vectorOne = firstPlacement.toString();
-        let vectorTwo = secondPlacement.toString();
-        newGameState.push(vectorOne);
-        newGameState.push(vectorTwo);
-        this.#gameState = newGameState;
-      }
-      return; // IF THE GAME STATE IS EMPTY WE DO NOT WANT TO CHECK FOR ENTANGLEMENT
-    }
-
-    if (wasCertainMove) {
-      for (let i = 0; i < this.#gameState.length; i++) {
-        let vectorOne = this.#gameState[i].concat(firstPlacement.toString());
-        newGameState.push(vectorOne);
-      }
-    } else {
-      for (let i = 0; i < this.#gameState.length; i++) {
-        let vectorOne = this.#gameState[i].concat(firstPlacement.toString());
-        let vectorTwo = this.#gameState[i].concat(secondPlacement.toString());
-        newGameState.push(vectorOne);
-        newGameState.push(vectorTwo);
-      }
-    }
-
-    this.#gameState = newGameState;
-  }
-
-  /**
-   * Finds the repeating character in an entanglement
-   * @returns
-   */
-  findCharacterInAllCase() {
+  findRepeatedChar() {
     let index = this.#moveStates.length - 2;
     let ithCharacters = this.getIthCharacter(this.#gameState, index);
     let count = 0;
+    // Iterate over each game state
     for (let y = 0; y < this.#gameState.length; y++) {
       let game = this.#gameState[y];
+      // iterate over all of the ith characters, checking there counts to see if they are the target
       for (let t = 0; t < ithCharacters.length; t++) {
         let character = ithCharacters[t];
         for (let i = index; i < this.#moveStates.length; i++) {
@@ -332,10 +390,122 @@ export default class Game {
             return character;
           }
         }
-        count = 0;
+        count = 0; // reset count for next game state
       }
     }
     return -1;
+  }
+
+  /**
+   * Returns "A" if it is an all or nothing case, "B" otherwise
+   * @param {int} column -> entanglement is occuring in
+   * @param {int} -> row first height in the entanglement
+   */
+  findEntanglementType(column, row) {
+    if (row == 7) {
+      return; // AVOID INDEX OUT OF BOUNDS
+    }
+    let topPiece = this.#board[row][column];
+    let bottomPiece = this.#board[row + 1][column];
+    if (
+      (bottomPiece == "PXX" && topPiece == "XXY") ||
+      (bottomPiece == "YXX" && topPiece == "XXP")
+    ) {
+      return "A";
+    } else {
+      return "B";
+    }
+  }
+
+  /**
+   * Is entanglement occuring
+   */
+  isEntanglementOccuring() {
+    for (let y = 7; y > 1; y--) {
+      for (let x = 0; x < 7; x++) {
+        let isEntangled =
+          (this.#board[y][x] == "PXX" && this.#board[y - 1][x] == "XXY") ||
+          (this.#board[y][x] == "XXP" && this.#board[y - 1][x] == "YXX") ||
+          (this.#board[y][x] == "YXX" && this.#board[y - 1][x] == "XXP") ||
+          (this.#board[y][x] == "XXY" && this.#board[y - 1][x] == "PXX");
+        if (isEntangled) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+  /**
+   * This function returns an array of a single x and y position if we need to entangle. It returns an empty array otherwise.
+   * @return [x, y] or []
+   */
+  doWeNeedToEntangle(firstPlacement, secondPlacement) {
+    let returnValue = [];
+
+    let firstX = firstPlacement;
+    let secondX = secondPlacement;
+    let firstY = this.firstOpenRow(this.#board, firstPlacement) + 1; // PLUS ONE BECAUSE WE UPDATED THE BOARD AND WE WANT THE FIRST OCCUPIED ROW
+    let secondY = this.firstOpenRow(this.#board, secondPlacement) + 1;
+
+    // CHECK TO MAKE SURE WE DON'T GO TO INDEX OUT OF BOUNDS
+
+    // CHECK FOR DOUBLE ENTANGLEMENT. THIS CHECK IS OK BECAUSE WE ONLY EVER HAVE THREE QUANTUM PIECES ON THE BOARD AT A TIME
+    if (firstY < 6) {
+      let pieceBelowFirst = this.#board[firstY + 1][firstX];
+      let secondPieceBelowFirst = this.#board[firstY + 2][firstX];
+      let piecesBelowAlreadyEntangled =
+        (secondPieceBelowFirst == "YXX" && pieceBelowFirst == "XXP") ||
+        (secondPieceBelowFirst == "XXY" && pieceBelowFirst == "PXX") ||
+        (secondPieceBelowFirst == "PXX" && pieceBelowFirst == "XXY") ||
+        (secondPieceBelowFirst == "XXP" && pieceBelowFirst == "YXX");
+      if (piecesBelowAlreadyEntangled) {
+        return [];
+      }
+    }
+
+    if (secondY < 6) {
+      let pieceBelowFirst = this.#board[secondY + 1][secondX];
+      let secondPieceBelowFirst = this.#board[secondY + 2][secondX];
+      let piecesBelowAlreadyEntangled =
+        (secondPieceBelowFirst == "YXX" && pieceBelowFirst == "XXP") ||
+        (secondPieceBelowFirst == "XXY" && pieceBelowFirst == "PXX") ||
+        (secondPieceBelowFirst == "PXX" && pieceBelowFirst == "XXY") ||
+        (secondPieceBelowFirst == "XXP" && pieceBelowFirst == "YXX");
+      if (piecesBelowAlreadyEntangled) {
+        return [];
+      }
+    }
+
+    if (firstY < 7) {
+      let firstPiece = this.#board[firstY][firstX];
+      let pieceBelowFirst = this.#board[firstY + 1][firstX];
+      let isFirstPieceEntangled =
+        (firstPiece == "YXX" && pieceBelowFirst == "XXP") ||
+        (firstPiece == "XXY" && pieceBelowFirst == "PXX") ||
+        (firstPiece == "PXX" && pieceBelowFirst == "XXY") ||
+        (firstPiece == "XXP" && pieceBelowFirst == "YXX");
+      if (isFirstPieceEntangled) {
+        returnValue.push(firstX);
+        returnValue.push(firstY);
+        return returnValue;
+      }
+    }
+    if (secondY < 7) {
+      let secondPiece = this.#board[secondY][secondX];
+      let pieceBelowSecond = this.#board[secondY + 1][secondX];
+      let isSecondPieceEntangled =
+        (secondPiece == "YXX" && pieceBelowSecond == "XXP") ||
+        (secondPiece == "XXY" && pieceBelowSecond == "PXX") ||
+        (secondPiece == "PXX" && pieceBelowSecond == "XXY") ||
+        (secondPiece == "XXP" && pieceBelowSecond == "YXX");
+      if (isSecondPieceEntangled) {
+        returnValue.push(secondX);
+        returnValue.push(secondY);
+        return returnValue;
+      }
+    }
+
+    return returnValue;
   }
 
   /**
@@ -347,21 +517,22 @@ export default class Game {
     let isEntanglementOccuring = this.doWeNeedToEntangle(
       firstPlacement,
       secondPlacement
-    ); // THIS IS THE FIRST POSITION OF THE ENTANGLEMENT
+    );
+    // If the array was empty we do not need to entangle
     if (isEntanglementOccuring.length != 0) {
       let entanglementType = this.findEntanglementType(
         isEntanglementOccuring[0],
         isEntanglementOccuring[1]
       );
 
-      let superpositionIndex = this.#gameState[0].length - 1; // length - 1 because of zero indexing
-      let repeatedChar = this.findCharacterInAllCase();
+      let superpositionIndex = this.#gameState[0].length - 1;
+      let repeatedChar = this.findRepeatedChar();
 
       if (entanglementType == "A") {
         this.#gameState = this.#gameState.filter(
           (game) =>
             (game.charAt(superpositionIndex) == repeatedChar &&
-              game.charAt(superpositionIndex - 1) == repeatedChar) || // THIS IS THE ALL CASE
+              game.charAt(superpositionIndex - 1) == repeatedChar) ||
             (game.charAt(superpositionIndex) != repeatedChar &&
               game.charAt(superpositionIndex - 1) != repeatedChar)
         );
@@ -370,16 +541,17 @@ export default class Game {
           (game) =>
             !(
               (game.charAt(superpositionIndex) == repeatedChar &&
-                game.charAt(superpositionIndex - 1) == repeatedChar) || // THIS IS THE ALL CASE
+                game.charAt(superpositionIndex - 1) == repeatedChar) ||
               (game.charAt(superpositionIndex) != repeatedChar &&
                 game.charAt(superpositionIndex - 1) != repeatedChar)
-            ) // THIS IS THE NOTHING CASE
+            )
         );
       }
     }
   }
+
   /**
-   * Checks for an uncertain under the pieces played in a given column
+   * Checks for an uncertain piece under the top piece played in a given column.
    * @param {int} column -> column to check for uncertain pieces in
    * @param {int} row -> first spot under the piece being checked in a group
    * @returns true if there are no uncertain pieces in the given column, false otherwise
@@ -559,197 +731,8 @@ export default class Game {
     }
   }
 
-  getRandomIntInclusiveExclusive(min, max) {
-    // Ensure min and max are integers
-    min = Math.ceil(min);
-    max = Math.floor(max);
-
-    // Generate a random integer between min (inclusive) and max (exclusive)
-    return Math.floor(Math.random() * (max - min)) + min;
-  }
-
   /**
-   * Returns the first instance of a value occuring on the board in a given column
-   * @param {string} target
-   * @param {int} column
-   * Returns row of first occurance of target. Returns -1 if not found
-   */
-  findInColumn(target, column) {
-    for (let y = 7; y > 0; y--) {
-      let foundTarget = this.#board[y][column] == target;
-      if (foundTarget) {
-        return y;
-      }
-    }
-    return -1;
-  }
-  /**
-   * This function tries to find pieces who need to be measured. It returns an empty array if no pieces need to be measured.
-   * @returns [x1, y1, x2, y2] or []
-   */
-  findPiecesToMeasure() {
-    let indexToMeasure = this.#moveStates.length - 3;
-    if (indexToMeasure < 0) {
-      return [];
-    }
-
-    if (this.#moveStates.charAt(indexToMeasure) == "C") {
-      return [];
-    }
-
-    let returnValue = [];
-    let state = this.#moveStates.charAt(indexToMeasure);
-    let options = this.getIthCharacter(
-      this.#gameState,
-      this.#moveStates.length - 3
-    );
-    let colorToLookFor = this.#moveStates.length % 2;
-    if (colorToLookFor == 1 && state == "V") {
-      let target = "XXP";
-      returnValue.push(options[0]);
-      returnValue.push(this.findInColumn(target, options[0]));
-      returnValue.push(options[1]);
-      returnValue.push(this.findInColumn(target, options[1]));
-      return returnValue;
-    } else if (colorToLookFor == 1 && state == "H") {
-      let target = "PXX";
-      returnValue.push(options[0]);
-      returnValue.push(this.findInColumn(target, options[0]));
-      returnValue.push(options[1]);
-      returnValue.push(this.findInColumn(target, options[1]));
-      return returnValue;
-    } else if (colorToLookFor == 0 && state == "V") {
-      let target = "XXY";
-      returnValue.push(options[0]);
-      returnValue.push(this.findInColumn(target, options[0]));
-      returnValue.push(options[1]);
-      returnValue.push(this.findInColumn(target, options[1]));
-      return returnValue;
-    } else if (colorToLookFor == 0 && state == "H") {
-      let target = "YXX";
-      returnValue.push(options[0]);
-      returnValue.push(this.findInColumn(target, options[0]));
-      returnValue.push(options[1]);
-      returnValue.push(this.findInColumn(target, options[1]));
-      return returnValue;
-    }
-
-    return [];
-  }
-
-  /**
-   * Is entanglement occuring
-   */
-  isEntanglementOccuring() {
-    for (let y = 7; y > 1; y--) {
-      for (let x = 0; x < 7; x++) {
-        let isEntangled =
-          (this.#board[y][x] == "PXX" && this.#board[y - 1][x] == "XXY") ||
-          (this.#board[y][x] == "XXP" && this.#board[y - 1][x] == "YXX") ||
-          (this.#board[y][x] == "YXX" && this.#board[y - 1][x] == "XXP") ||
-          (this.#board[y][x] == "XXY" && this.#board[y - 1][x] == "PXX");
-        if (isEntangled) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-  /**
-   * This function returns an array of a single x and y position if we need to entangle. It returns an empty array otherwise.
-   * @return [x, y] or []
-   */
-  doWeNeedToEntangle(firstPlacement, secondPlacement) {
-    let returnValue = [];
-
-    let firstX = firstPlacement;
-    let secondX = secondPlacement;
-    let firstY = this.firstOpenRow(this.#board, firstPlacement) + 1; // PLUS ONE BECAUSE WE UPDATED THE BOARD AND WE WANT THE FIRST OCCUPIED ROW
-    let secondY = this.firstOpenRow(this.#board, secondPlacement) + 1;
-
-    // CHECK TO MAKE SURE WE DON'T GO TO INDEX OUT OF BOUNDS
-
-    // CHECK FOR DOUBLE ENTANGLEMENT. THIS CHECK IS OK BECAUSE WE ONLY EVER HAVE THREE QUANTUM PIECES ON THE BOARD AT A TIME
-    if (firstY < 6) {
-      let pieceBelowFirst = this.#board[firstY + 1][firstX];
-      let secondPieceBelowFirst = this.#board[firstY + 2][firstX];
-      let piecesBelowAlreadyEntangled =
-        (secondPieceBelowFirst == "YXX" && pieceBelowFirst == "XXP") ||
-        (secondPieceBelowFirst == "XXY" && pieceBelowFirst == "PXX") ||
-        (secondPieceBelowFirst == "PXX" && pieceBelowFirst == "XXY") ||
-        (secondPieceBelowFirst == "XXP" && pieceBelowFirst == "YXX");
-      if (piecesBelowAlreadyEntangled) {
-        return [];
-      }
-    }
-
-    if (secondY < 6) {
-      let pieceBelowFirst = this.#board[secondY + 1][secondX];
-      let secondPieceBelowFirst = this.#board[secondY + 2][secondX];
-      let piecesBelowAlreadyEntangled =
-        (secondPieceBelowFirst == "YXX" && pieceBelowFirst == "XXP") ||
-        (secondPieceBelowFirst == "XXY" && pieceBelowFirst == "PXX") ||
-        (secondPieceBelowFirst == "PXX" && pieceBelowFirst == "XXY") ||
-        (secondPieceBelowFirst == "XXP" && pieceBelowFirst == "YXX");
-      if (piecesBelowAlreadyEntangled) {
-        return [];
-      }
-    }
-
-    if (firstY < 7) {
-      let firstPiece = this.#board[firstY][firstX];
-      let pieceBelowFirst = this.#board[firstY + 1][firstX];
-      let isFirstPieceEntangled =
-        (firstPiece == "YXX" && pieceBelowFirst == "XXP") ||
-        (firstPiece == "XXY" && pieceBelowFirst == "PXX") ||
-        (firstPiece == "PXX" && pieceBelowFirst == "XXY") ||
-        (firstPiece == "XXP" && pieceBelowFirst == "YXX");
-      if (isFirstPieceEntangled) {
-        returnValue.push(firstX);
-        returnValue.push(firstY);
-        return returnValue;
-      }
-    }
-    if (secondY < 7) {
-      let secondPiece = this.#board[secondY][secondX];
-      let pieceBelowSecond = this.#board[secondY + 1][secondX];
-      let isSecondPieceEntangled =
-        (secondPiece == "YXX" && pieceBelowSecond == "XXP") ||
-        (secondPiece == "XXY" && pieceBelowSecond == "PXX") ||
-        (secondPiece == "PXX" && pieceBelowSecond == "XXY") ||
-        (secondPiece == "XXP" && pieceBelowSecond == "YXX");
-      if (isSecondPieceEntangled) {
-        returnValue.push(secondX);
-        returnValue.push(secondY);
-        return returnValue;
-      }
-    }
-
-    return returnValue;
-  }
-
-  /**
-   * Returns an array containing the ith character of each string
-   * @param {string[]} gameStates -> an array of gameStates
-   * @returns char[] -> an array containing the ith character of each string;
-   */
-  getIthCharacter(gameStates, i) {
-    // Use a Set to store unique characters
-    const uniqueChars = new Set();
-
-    // Iterate over each string and add the character at the given index to the Set
-    gameStates.forEach((str) => {
-      if (str.length > i) {
-        uniqueChars.add(parseInt(str.charAt(i)));
-      }
-    });
-
-    // Convert the Set to an array and return it
-    return Array.from(uniqueChars);
-  }
-
-  /**
-   * First this function checks to see if the placement is valid. If the placement was valid it places a piece in the correct state on the board
+   * First this function checks to see if the placement is valid. If the placement was valid it places a piece in the correct state on the board.
    * @returns "done" if the turn is over, if not it returns "notDone"
    */
   place() {
@@ -764,15 +747,12 @@ export default class Game {
       firstPlacement != column &&
       this.#board[2][column] != "PPP" &&
       this.#board[2][column] != "YYY";
-    let isValid = validClassicMove || validQuantumMove;
-    if (isValid) {
-      if (state == "certain") {
-        return this.placeCertainPiece();
-      } else if (state == "horizontal") {
-        return this.placeHorizontalPiece();
-      } else {
-        return this.placeVerticalPiece();
-      }
+    if (state == "certain" && validClassicMove) {
+      return this.placeCertainPiece();
+    } else if (state == "horizontal" && validQuantumMove) {
+      return this.placeHorizontalPiece();
+    } else if (state == "vertical" && validQuantumMove) {
+      return this.placeVerticalPiece();
     }
     return "notDone";
   }
@@ -780,15 +760,14 @@ export default class Game {
   /**
    * If a vertical piece has not been placed during the turn, this function temporarily places a vertical piece
    * at the appropriate location above the board. Otherwise, it gets rid of the temporary piece and drops the pieces
-   * to the correct depths. Should only be called on valid moves
+   * to the correct depths. Should only be called on valid moves.
    * @returns "done" if the turn is over, "notDone" otherwise
    */
   placeVerticalPiece() {
     let column = this.#turnInProgress.column;
     let firstPlacement = this.#turnInProgress.firstPlacement;
-
     if (firstPlacement == -1) {
-      // Temporarily put a piece above the board to show where it will fall
+      // Temporarily put a piece above the board to show where it will fall on the board
       if (this.#turnInProgress.color == "purple") {
         this.#board[this.turnInProgressDepth(column)][column] = "XXP";
       } else {
@@ -797,7 +776,6 @@ export default class Game {
       this.#turnInProgress.firstPlacement = column;
       this.#turnInProgress.canModifyState = false;
       this.#turnInProgress.column = (this.#turnInProgress.column + 1) % 7; // push the next half piece one position to the right
-
       return "notDone";
     }
 
@@ -820,7 +798,7 @@ export default class Game {
   /**
    * If a horizontal piece has not been placed during the turn, this function temporarily places a horizontal piece
    * at the appropriate location above the board. Otherwise, it gets rid of the temporary piece and drops the pieces
-   * to the correct depths. Should only be called on valid moves
+   * to the correct depths. Should only be called on valid moves.
    * @returns "done" if the turn is over, "notDone" otherwise
    */
   placeHorizontalPiece() {
@@ -834,7 +812,6 @@ export default class Game {
       } else {
         this.#board[this.turnInProgressDepth(column)][column] = "YXX";
       }
-
       this.#turnInProgress.firstPlacement = column;
       this.#turnInProgress.canModifyState = false;
       this.#turnInProgress.column = (this.#turnInProgress.column + 1) % 7; // push the next half piece one position to the right
@@ -855,12 +832,11 @@ export default class Game {
   }
 
   /**
-   * Places a certain piece on the board. Should only be called on valid moves
+   * Places a certain piece on the board. Should only be called on valid moves.
    * @returns "done"
    */
   placeCertainPiece() {
     let column = this.#turnInProgress.column;
-
     this.updateGameState(column, column);
     this.#moveStates = this.#moveStates.concat("C");
     this.gameStateToBoard();
@@ -894,7 +870,6 @@ export default class Game {
         return depth;
       }
     }
-
     return depth;
   }
 
@@ -934,9 +909,21 @@ export default class Game {
 
     if (this.#winner != "XXX") {
       // TODO
+      // TODO
+      // TODO
+      // TODO
+      // TODO
+      // TODO
+      // TODO
     }
 
     if (this.isGameDrawn) {
+      // TODO
+      // TODO
+      // TODO
+      // TODO
+      // TODO
+      // TODO
       // TODO
     }
   }
@@ -987,6 +974,11 @@ export default class Game {
     }
   }
 
+  /**
+   * This function handles all the drawing after an action happens
+   * @param {string[][]} board 
+   * @param {int} turnInProgressColumn 
+   */
   drawEverything(board, turnInProgressColumn) {
     this.#graphics.clearCanvasGrey();
     this.#graphics.drawGridLines();
