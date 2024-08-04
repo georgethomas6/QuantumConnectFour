@@ -29,26 +29,28 @@ const place = document.getElementById("place");
 const restart = document.getElementById("restart");
 const instructions = document.getElementById("instructions");
 
-instructions.addEventListener("click", function (e) {
-  window.location.href = "instructions.html";
+
+
+place.addEventListener("click", function (e) {
+  game.play(true, false, false, false, false, false);
 });
 
 right.addEventListener("click", function (e) {
-  game.reactToRightButton();
+  game.play(false, true, false, false, false, false);
 });
 
 left.addEventListener("click", function (e) {
-  game.reactToLeftButton();
+  game.play(false, false, true, false, false, false);
 });
 
 state.addEventListener("click", function (e) {
-  game.reactToStateButton();
+  game.play(false, false, false, true, false, false);
 });
 
-place.addEventListener("click", function (e) {
-  game.reactToPlaceButton();
+instructions.addEventListener("click", function (e) {
+  game.play(false, false, false, false, true, false);
 });
 
 restart.addEventListener("click", function (e) {
-  game.reactToRestartButton();
+  game.play(false, false, false, false, false, true);
 });

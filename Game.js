@@ -12,6 +12,7 @@ export default class Game {
   #gameState;
   #moveStates; // this is a string of the type of moves that have been played, consists of V, C, H
   #graphics;
+  #winner;
   constructor() {
     //initalize blank board
     this.#board = this.initBlankBoard();
@@ -19,10 +20,14 @@ export default class Game {
     this.#graphics = new Graphics();
     this.#gameState = []; // this will be an array of strings
     this.#moveStates = "";
+    this.#winner = "XXX";
   }
 
   //GETTERS
 
+  get winner() {
+    return this.#winner;
+  }
   /**
    * Returns the board
    * @returns string[][]
@@ -77,6 +82,10 @@ export default class Game {
    */
   set moveStates(typeofMoves) {
     this.#moveStates = typeofMoves;
+  }
+
+  set winner(winner) {
+    this.#winner = winner;
   }
 
   // GAME FUNCTIONS
@@ -270,7 +279,7 @@ export default class Game {
     let newGameState = [];
     let wasCertainMove = firstPlacement == secondPlacement;
     let gameStateEmpty = this.#gameState.length == 0;
-    // If the game state was empty then we can modify the current gameState we have to create one 
+    // If the game state was empty then we can modify the current gameState we have to create one
     if (gameStateEmpty) {
       if (wasCertainMove) {
         let vectorOne = firstPlacement.toString();
@@ -505,7 +514,7 @@ export default class Game {
 
   /**
    * Checks to see if the game has been drawn
-   * @returns true if the game has not been drawn, false otherwise
+   * @returns true if the game has been drawn, false otherwise
    */
   isGameDrawn() {
     let count = 0;
@@ -889,19 +898,54 @@ export default class Game {
     return depth;
   }
 
+  play(
+    placing,
+    movingRight,
+    movingLeft,
+    changingState,
+    changingPages,
+    restarting
+  ) {
+    if (this.#winner == "XXX" && !this.isGameDrawn()) {
+      console.log("WINNER IS NOT YET DETERMINED");
+      if (placing) {
+        this.reactToPlaceButton();
+        return;
+      } else if (movingRight) {
+        this.reactToRightButton();
+        return;
+      } else if (movingLeft) {
+        this.reactToLeftButton();
+        return;
+      } else if (changingState) {
+        this.reactToStateButton();
+        return;
+      }
+    }
+
+    if (changingPages) {
+      window.location.href = "instructions.html";
+      return;
+    }
+    if (restarting) {
+      this.reactToRestartButton();
+      return;
+    }
+
+    if (this.#winner != "XXX") {
+      // TODO
+    }
+
+    if (this.isGameDrawn) {
+      // TODO
+    }
+  }
+
   /**
    * Begins the game
    */
   start() {
-    this.#graphics.clearCanvasGrey();
-    this.#graphics.drawGridLines();
-    this.#graphics.drawPieces(this.#board);
-    this.#graphics.drawTurnInProgress(
-      this.#turnInProgress.column,
-      this.turnInProgressDepth(this.#turnInProgress.column),
-      this.#turnInProgress.color,
-      this.#turnInProgress.state
-    );
+    this.drawEverything(this.#board, this.#turnInProgress.column);
   }
 
   /**
@@ -912,15 +956,7 @@ export default class Game {
     if (this.#turnInProgress.column == this.#turnInProgress.firstPlacement) {
       this.#turnInProgress.incrementPosition();
     }
-    this.#graphics.clearCanvasGrey();
-    this.#graphics.drawGridLines();
-    this.#graphics.drawPieces(this.#board);
-    this.#graphics.drawTurnInProgress(
-      this.#turnInProgress.column,
-      this.turnInProgressDepth(this.#turnInProgress.column),
-      this.#turnInProgress.color,
-      this.#turnInProgress.state
-    );
+    this.drawEverything(this.#board, this.#turnInProgress.column);
   }
 
   /**
@@ -931,15 +967,7 @@ export default class Game {
     if (this.#turnInProgress.column == this.#turnInProgress.firstPlacement) {
       this.#turnInProgress.decrementPosition();
     }
-    this.#graphics.clearCanvasGrey();
-    this.#graphics.drawGridLines();
-    this.#graphics.drawPieces(this.#board);
-    this.#graphics.drawTurnInProgress(
-      this.#turnInProgress.column,
-      this.turnInProgressDepth(this.#turnInProgress.column),
-      this.#turnInProgress.color,
-      this.#turnInProgress.state
-    );
+    this.drawEverything(this.#board, this.#turnInProgress.column);
   }
 
   /**
@@ -950,21 +978,25 @@ export default class Game {
     if (canModifyState) {
       this.#turnInProgress.changeState();
     }
-    this.#graphics.clearCanvasGrey();
-    this.#graphics.drawGridLines();
-    this.#graphics.drawPieces(this.#board);
-    this.#graphics.drawTurnInProgress(
-      this.#turnInProgress.column,
-      this.turnInProgressDepth(this.#turnInProgress.column),
-      this.#turnInProgress.color,
-      this.#turnInProgress.state
-    );
+    this.drawEverything(this.#board, this.#turnInProgress.column);
   }
 
   printBoard() {
     for (let i = 0; i < this.#board.length; i++) {
       console.log(this.#board[i]);
     }
+  }
+
+  drawEverything(board, turnInProgressColumn) {
+    this.#graphics.clearCanvasGrey();
+    this.#graphics.drawGridLines();
+    this.#graphics.drawPieces(board);
+    this.#graphics.drawTurnInProgress(
+      this.#turnInProgress.column,
+      this.turnInProgressDepth(turnInProgressColumn),
+      this.#turnInProgress.color,
+      this.#turnInProgress.state
+    );
   }
 
   /**
@@ -975,31 +1007,25 @@ export default class Game {
       // Update time on board first because the place functions will set the time on board value for the new piece to 1 and we don't want to accidentally update it to 2
       this.measure();
       this.gameStateToBoard();
+      if (this.checkWinner() != "XXX") {
+        this.#winner = this.checkWinner();
+      } else if (this.isGameDrawn()) {
+        this.#winner = "DDD";
+      }
       this.changeTurn();
     }
-    this.#graphics.clearCanvasGrey();
-    this.#graphics.drawGridLines();
-    this.#graphics.drawPieces(this.#board);
-    this.#graphics.drawTurnInProgress(
-      this.#turnInProgress.column,
-      this.turnInProgressDepth(this.#turnInProgress.column),
-      this.#turnInProgress.color,
-      this.#turnInProgress.state
-    );
+    this.drawEverything(this.#board, this.#turnInProgress.column);
   }
 
   /**
    * Handles a restart button click
    */
   reactToRestartButton() {
-    this.#board = [];
-    for (let y = 0; y < 8; y++) {
-      let row = ["XXX", "XXX", "XXX", "XXX", "XXX", "XXX", "XXX"];
-      this.#board.push(row);
-    }
+    this.#board = this.initBlankBoard();
     this.#turnInProgress = new TurnInProgress("purple");
     this.#gameState = [];
     this.#moveStates = "";
+    this.#winner = "XXX";
     this.start();
   }
 }
