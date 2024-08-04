@@ -796,7 +796,7 @@ export default class Game {
       }
       this.#turnInProgress.firstPlacement = column;
       this.#turnInProgress.canModifyState = false;
-      this.#turnInProgress.column = 3; // reset the column to the middle of the board
+      this.#turnInProgress.column = (this.#turnInProgress.column + 1) % 7; // push the next half piece one position to the right
 
       return "notDone";
     }
@@ -837,7 +837,7 @@ export default class Game {
 
       this.#turnInProgress.firstPlacement = column;
       this.#turnInProgress.canModifyState = false;
-      this.#turnInProgress.column = 3; // reset the column to the middle of the board
+      this.#turnInProgress.column = (this.#turnInProgress.column + 1) % 7; // push the next half piece one position to the right
       return "notDone";
     }
 
