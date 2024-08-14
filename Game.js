@@ -743,7 +743,7 @@ export default class Game {
     let validClassicMove = state == "certain" && row >= 2;
     let validQuantumMove =
       state != "certain" &&
-      row >= 2 &&
+      row >= 0 &&
       firstPlacement != column &&
       this.#board[2][column] != "PPP" &&
       this.#board[2][column] != "YYY";
@@ -755,6 +755,19 @@ export default class Game {
       return this.placeVerticalPiece();
     }
     return "notDone";
+  }
+
+  /**
+   * @return number of open columns
+   */
+  getNumberOfOpenColumns(){
+    let ret = 0;
+    for (let x = 0; x < 7; x++){
+      if (this.#board[2][x] != "PPP" && this.#board[2][x] != "YYY"){
+          ret++;
+      }
+    }
+    return ret;
   }
 
   /**
@@ -962,7 +975,7 @@ export default class Game {
    */
   reactToStateButton() {
     let canModifyState = this.#turnInProgress.canModifyState;
-    if (canModifyState) {
+    if (canModifyState && this.getNumberOfOpenColumns() > 1) {
       this.#turnInProgress.changeState();
     }
     this.drawEverything(this.#board, this.#turnInProgress.column);
